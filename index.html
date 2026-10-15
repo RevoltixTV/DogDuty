@@ -75,13 +75,13 @@ const shell=(r,body)=>'<div class="wrap stack">'+body+'</div><nav class="bar" ar
 const center=b=>'<div class="wrap stack" style="min-height:100dvh;align-content:center;gap:24px">'+b+'</div>';
 
 function auth(reg){return center(LOGO+'<div><h1>'+(reg?'Konto erstellen':'Willkommen zurück')+'</h1><p class="mute" style="margin-top:8px">'+(reg?'In einer Minute startklar.':'Schau nach, wer heute mit dem Hund geht.')+'</p></div>'+
-'<div class="stack" style="gap:12px"><a class="btn ghost" href="#/setup">Weiter mit Google</a><a class="btn ghost" href="#/setup">Weiter mit Apple</a></div><div class="sep">oder mit E-Mail</div>'+
-'<form class="stack" style="gap:12px" data-f="auth'+(reg?'r':'l')+'">'+(reg?'<input class="input" placeholder="Dein Name" autocomplete="name" required>':'')+'<input class="input" type="email" placeholder="E-Mail" autocomplete="email" required><input class="input" type="password" placeholder="Passwort" minlength="8" autocomplete="'+(reg?'new':'current')+'-password" required><button class="btn">'+(reg?'Konto erstellen':'Anmelden')+'</button></form>'+
+'<div class="stack" style="gap:12px"><button class="btn ghost" data-a="google">Mit Google fortfahren</button><button class="btn ghost" data-a="apple">Mit Apple fortfahren</button></div><div class="sep">oder mit E-Mail</div>'+(S.err?'<p role="alert" style="color:#FF9B9B;font-size:14px">'+S.err+'</p>':'')+
+'<form class="stack" style="gap:12px" data-f="auth'+(reg?'r':'l')+'">'+(reg?'<input class="input" name="n" placeholder="Dein Name" autocomplete="name" required>':'')+'<input class="input" name="e" type="email" placeholder="E-Mail" autocomplete="email" required><input class="input" name="p" type="password" placeholder="Passwort" minlength="8" autocomplete="'+(reg?'new':'current')+'-password" required><button class="btn">'+(reg?'Konto erstellen':'Anmelden')+'</button></form>'+
 '<p class="mute sm" style="text-align:center">'+(reg?'Schon dabei? <a class="leaf b" href="#/login">Anmelden</a>':'Neu hier? <a class="leaf b" href="#/register">Konto erstellen</a>')+'</p>')}
 
 const R={
 '':()=>'<div class="wide"><header class="row sp" style="padding:24px 0">'+LOGO+'<div class="row" style="gap:8px"><a class="sm b mute" href="#/login" style="padding:8px 12px;text-decoration:none">Anmelden</a><a class="btn auto sm" style="padding:10px 16px" href="#/register">Kostenlos starten</a></div></header>'+
-'<section class="hero"><div><h1>Wer geht mit dem Hund?</h1><p class="leaf b" style="font-size:24px;margin-top:20px">DogDuty weiß es.</p><p class="mute" style="font-size:18px;margin:20px 0 32px;max-width:420px">Die Gassi-Planung für Familien, Paare und WGs. Fair, transparent und ohne Nachfragen im Gruppenchat.</p><div class="row" style="flex-wrap:wrap"><a class="btn auto" href="#/register">Gruppe erstellen</a><a class="btn ghost auto" href="#/home">Demo ansehen</a></div></div>'+
+'<section class="hero"><div><h1>Wer geht mit dem Hund?</h1><p class="leaf b" style="font-size:24px;margin-top:20px">DogDuty weiß es.</p><p class="mute" style="font-size:18px;margin:20px 0 32px;max-width:420px">Die Gassi-Planung für Familien, Paare und WGs. Fair, transparent und ohne Nachfragen im Gruppenchat.</p><div class="row" style="flex-wrap:wrap"><a class="btn auto" href="#/register">Gruppe erstellen</a><a class="btn ghost auto" data-a="demo" href="#/home">Demo ansehen</a></div></div>'+
 '<div class="card stack" style="max-width:360px;width:100%;margin:auto;box-shadow:0 24px 60px #0008"><div class="row sp"><div><p class="b" style="font-size:26px">Bruno</p><p class="leaf sm">'+dot('var(--leaf)')+'Gut versorgt</p></div><span class="av" style="width:56px;height:56px;background:var(--ink);color:#fff">'+PAW+'</span></div><div style="background:var(--ink);border-radius:18px;padding:16px"><p class="mute sm">Nächste Runde</p><p class="b" style="font-size:30px">18:00 Uhr</p><p class="mute">Tim ist dran</p></div><div class="btn">ICH GEHE</div></div></section>'+
 '<section class="feat">'+[['Ein Blick, eine Antwort','Du siehst sofort, wer als Nächstes mit dem Hund rausgeht.'],['Runden tauschen','Kannst du nicht? Ein Tipp, und die Gruppe wird gefragt.'],['Fair verteilt','Jede erledigte Runde wird festgehalten. Keine Diskussionen mehr.']].map(f=>'<div class="card"><h2 style="font-size:18px">'+f[0]+'</h2><p class="mute" style="margin-top:8px">'+f[1]+'</p></div>').join('')+'</section></div>',
 login:()=>auth(false),register:()=>auth(true),
@@ -105,14 +105,18 @@ walk:()=>shell('walk','<div><h1>Runde dokumentieren</h1><p class="mute" style="m
 '<section class="stack" style="gap:12px"><h2 style="font-size:16px">Notiz (optional)</h2><textarea class="input" id="note" placeholder="z. B. Hat mit einem Labrador gespielt">'+S.note+'</textarea></section><button class="btn" data-a="save">Runde speichern</button>'),
 group:()=>{const adm=M.find(m=>m.id==ME).r=='Admin';return shell('group','<h1>'+S.grp.n+'</h1><div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;font-size:32px;background:var(--ink);color:#fff">'+PAW+'</span><div class="grow"><p class="b" style="font-size:20px">'+S.dog.n+'</p><p class="mute sm">'+S.dog.breed+' · '+S.dog.age+'</p></div>'+(adm?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':'')+'</div>'+
 '<div class="card"><p class="mute sm">Einladungscode</p><div class="row sp" style="margin-top:8px"><p class="b" style="font-size:24px;letter-spacing:.1em">'+S.grp.code+'</p><button class="btn ghost auto sm" style="padding:8px 16px" data-a="copy">'+(S.copied?'Kopiert':'Kopieren')+'</button></div></div>'+
-'<div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">'+M.map(m=>'<div class="row" style="padding:12px 0"><span class="av" style="background:'+m.c+'">'+m.n[0]+'</span><span class="grow b">'+m.n+(m.id==ME?' (du)':'')+'</span><span class="mute sm">'+m.r+'</span></div>').join('')+'</div>'+(adm?'<button class="btn ghost" style="margin-top:8px">Mitglied einladen</button>':'')+'</div><a class="mute sm" href="#/" style="text-align:center;padding:8px">Abmelden</a>')}
+'<div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">'+M.map(m=>'<div class="row" style="padding:12px 0"><span class="av" style="background:'+m.c+'">'+m.n[0]+'</span><span class="grow b">'+m.n+(m.id==ME?' (du)':'')+'</span><span class="mute sm">'+m.r+'</span></div>').join('')+'</div>'+(adm?'<button class="btn ghost" style="margin-top:8px">Mitglied einladen</button>':'')+'</div><button class="mute sm" data-a="logout" style="background:none;border:0;padding:8px;cursor:pointer">Abmelden</button>')}
 };
-function render(keep){const k=(location.hash||'#/').slice(2);document.getElementById('app').innerHTML=(R[k]||R[''])();if(!keep)scrollTo(0,0)}
+function render(keep){const k=(location.hash||'#/').slice(2),A=document.getElementById('app');
+if(!S.ready){A.innerHTML=center('<p class="mute" style="text-align:center">Lädt …</p>');return}
+if(['home','calendar','walk','group','setup','dog'].includes(k)&&!S.user&&!S.demo){location.hash='#/login';return}
+A.innerHTML=(R[k]||R[''])();if(!keep)scrollTo(0,0)}
+setTimeout(()=>{if(!S.ready){S.ready=true;S.err='Der Anmeldedienst ist nicht erreichbar.';render()}},8000);
 function planForm(){const chip=(on,a,v,t)=>'<button type="button" class="chip '+(on?'on':'')+'" data-a="'+a+'" data-v="'+v+'" aria-pressed="'+on+'">'+t+'</button>',lab=t=>'<p class="mute sm" style="margin-bottom:8px">'+t+'</p>';
 return '<form class="card stack" data-f="plan" style="gap:16px"><h2 style="font-size:17px">Neue Runde einplanen</h2><div>'+lab('Tag')+'<div class="dayrow">'+DAYS.map((d,i)=>chip(S.pd==i,'pd',i,d)).join('')+'</div></div><div>'+lab('Art der Runde')+'<div class="row" style="flex-wrap:wrap;gap:8px">'+['Morgenrunde','Mittagsrunde','Abendrunde','Nachtrunde'].map(l=>chip(S.pl==l,'pl',l,l)).join('')+'</div></div><div>'+lab('Uhrzeit')+'<input class="input" type="time" name="t" value="'+S.pt+'" required></div><div>'+lab('Wer geht?')+'<div class="row" style="flex-wrap:wrap;gap:8px">'+[['tim','Ich'],['lena','Lena'],['noah','Noah'],['','Offen lassen']].map(p=>chip(S.pw==p[0],'pw',p[0],p[1])).join('')+'</div></div><button class="btn">Runde speichern</button></form>'}
 const nxt=()=>S.walks.find(w=>w.d==0&&w.s!='erledigt');
 document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v,w=S.walks.find(x=>x.id==v);
-if(a=='tab')S.tab=v;if(a=='plan')S.plan=!S.plan;if(a=='pd')S.pd=+v;if(a=='pw')S.pw=v;if(a=='pl'){S.pl=v;S.pt={Morgenrunde:'07:30',Mittagsrunde:'13:00',Abendrunde:'18:00',Nachtrunde:'21:30'}[v]}if(a=='view')S.view=v;if(a=='day')S.day=+v;if(a=='dur')S.dur=v;if(a=='pee')S.pee=!S.pee;if(a=='poop')S.poop=!S.poop;
+if(a=='google'||a=='apple'){AUTH.social(a);return}if(a=='logout'){AUTH.logout();return}if(a=='demo')S.demo=true;if(a=='tab')S.tab=v;if(a=='plan')S.plan=!S.plan;if(a=='pd')S.pd=+v;if(a=='pw')S.pw=v;if(a=='pl'){S.pl=v;S.pt={Morgenrunde:'07:30',Mittagsrunde:'13:00',Abendrunde:'18:00',Nachtrunde:'21:30'}[v]}if(a=='view')S.view=v;if(a=='day')S.day=+v;if(a=='dur')S.dur=v;if(a=='pee')S.pee=!S.pee;if(a=='poop')S.poop=!S.poop;
 if(a=='go'&&nxt()){nxt().w=ME;nxt().s='uebernommen'}
 if(a=='cant'&&nxt()){nxt().w=undefined;nxt().s='offen'}
 if(a=='take'){w.w=ME;w.s='uebernommen'}if(a=='free'){w.w=undefined;w.s='offen'}
@@ -121,8 +125,35 @@ if(a=='save'){const n=S.walks.find(x=>x.d==0&&x.w==ME&&x.s!='erledigt');if(n){n.
 render(1)});
 document.addEventListener('input',e=>{if(e.target.id=='note')S.note=e.target.value;if(e.target.name=='t')S.pt=e.target.value});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target.dataset.f,d=new FormData(e.target);
-if(f=='authl'||f=='authr')location.hash='#/setup';if(f=='plan'){S.pt=d.get('t');S.walks.push({id:Date.now(),l:S.pl,t:S.pt,d:S.pd,w:S.pw||undefined,s:S.pw?'geplant':'offen'});S.walks.sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));S.plan=false;S.view='tag';S.day=S.pd;render(1);return}
-if(f=='setup'){if(S.tab=='new'){if(d.get('g')){S.grp.n=d.get('g');S.grp.code=d.get('g').trim().split(' ').pop().slice(0,5).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}location.hash='#/dog'}else location.hash='#/home'}
-if(f=='dog'){S.dog={n:d.get('n'),age:d.get('a')||'–',breed:d.get('b')||'–'};location.hash='#/home'}});
+if(f=='authl'||f=='authr'){AUTH.email(f=='authr',d.get('n'),d.get('e'),d.get('p'));return}if(f=='plan'){S.pt=d.get('t');S.walks.push({id:Date.now(),l:S.pl,t:S.pt,d:S.pd,w:S.pw||undefined,s:S.pw?'geplant':'offen'});S.walks.sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));S.plan=false;S.view='tag';S.day=S.pd;render(1);return}
+if(f=='setup'){if(S.tab=='new'){if(d.get('g')){S.grp.n=d.get('g');S.grp.code=d.get('g').trim().split(' ').pop().slice(0,5).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}location.hash='#/dog'}else{AUTH.done();location.hash='#/home'}}
+if(f=='dog'){S.dog={n:d.get('n'),age:d.get('a')||'–',breed:d.get('b')||'–'};AUTH.done();location.hash='#/home'}});
 addEventListener('hashchange',()=>render());render();
-</script></body></html>
+</script><script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,OAuthProvider,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+/* TRAGE HIER DEINE FIREBASE-DATEN EIN */
+const cfg={apiKey:"AIzaSyA-vyQbJjdlt2HHlxJaXICoDY00X2DFA-0",authDomain:"dogduty-7cc17.firebaseapp.com",projectId:"dogduty-7cc17",appId:"1:164287072195:web:4cf49d6b423a6c07639f76"};
+const W='E-Mail oder Passwort ist falsch.',E={'auth/invalid-credential':W,'auth/wrong-password':W,'auth/user-not-found':W,'auth/invalid-email':'Bitte gib eine gültige E-Mail ein.','auth/email-already-in-use':'Diese E-Mail ist schon registriert.','auth/weak-password':'Das Passwort ist zu schwach.','auth/popup-closed-by-user':'Anmeldung abgebrochen.','auth/cancelled-popup-request':'Anmeldung abgebrochen.','auth/popup-blocked':'Das Popup wurde blockiert. Bitte erlaube Popups.','auth/operation-not-allowed':'Diese Anmeldeart ist in Firebase noch nicht aktiviert.','auth/unauthorized-domain':'Diese Adresse ist in Firebase nicht freigegeben.','auth/too-many-requests':'Zu viele Versuche. Bitte warte kurz.'};
+const fail=m=>{S.err=m;render(1)},msg=e=>E[e.code]||'Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
+if(cfg.apiKey.startsWith('DEIN')){const n=()=>fail('Firebase ist noch nicht eingerichtet.');window.AUTH={social:n,email:n,done(){},logout(){}};S.ready=true;render()}
+else{
+const auth=getAuth(initializeApp(cfg)),db=getFirestore();let pend=null;
+const PV={'google.com':'google','apple.com':'apple',password:'email'};
+async function sync(u){const ref=doc(db,'users',u.uid),s=await getDoc(ref);
+ if(s.exists()){await updateDoc(ref,{lastLogin:serverTimestamp()});return s.data()}
+ const d={uid:u.uid,name:pend||u.displayName||(u.email||'').split('@')[0]||'Nutzer',email:u.email||'',provider:PV[u.providerData[0]?.providerId]||'email',createdAt:serverTimestamp(),lastLogin:serverTimestamp(),setupDone:false};
+ await setDoc(ref,d);return d}
+window.AUTH={
+ async social(p){S.err='';try{const v=p=='google'?new GoogleAuthProvider():new OAuthProvider('apple.com');if(p=='apple'){v.addScope('email');v.addScope('name')}await signInWithPopup(auth,v)}catch(e){fail(msg(e))}},
+ async email(reg,n,e,p){S.err='';try{if(reg){pend=n;await createUserWithEmailAndPassword(auth,e,p)}else await signInWithEmailAndPassword(auth,e,p)}catch(x){fail(msg(x))}},
+ async done(){if(S.user){S.profile.setupDone=true;try{await updateDoc(doc(db,'users',S.user.uid),{setupDone:true})}catch(e){console.error(e)}}},
+ async logout(){await signOut(auth);S.demo=false;location.hash='#/'}};
+onAuthStateChanged(auth,async u=>{S.user=u;S.profile={};
+ if(u){try{S.profile=await sync(u)}catch(e){console.error('Datenbank:',e)}}
+ S.ready=true;const k=(location.hash||'#/').slice(2);
+ if(u&&['','login','register'].includes(k)){const t=S.profile.setupDone?'#/home':'#/setup';if(location.hash===t)render();else location.hash=t}else render()});
+}
+</script>
+</body></html>
