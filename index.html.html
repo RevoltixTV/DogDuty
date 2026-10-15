@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DogDuty</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--ink:#1B1E21;--card:#292D31;--line:#383D42;--mute:#9AA3AA;--leaf:#8FE3A0;--amber:#F5C76B;--fg:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--fg);font:16px/1.45 "Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+h1,h2,p{margin:0}
+.wrap{max-width:440px;margin:0 auto;padding:28px 20px 110px}
+.wide{max-width:960px;margin:0 auto;padding:0 24px}
+.stack{display:grid;gap:16px}.row{display:flex;align-items:center;gap:12px}.sp{justify-content:space-between}.grow{flex:1;min-width:0}
+.mute{color:var(--mute)}.leaf{color:var(--leaf)}.sm{font-size:14px}.b{font-weight:700}
+h1{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:18px;background:var(--leaf);color:var(--ink);padding:16px 20px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.auto{width:auto}
+a.btn:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:16px;padding:14px 16px;outline-offset:0}
+.input:focus{border-color:var(--leaf)}
+textarea.input{min-height:96px;resize:vertical}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0}
+.chip.on{background:var(--leaf);color:var(--ink);border-color:var(--leaf)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px}
+.tabs button{border:0;background:none;border-radius:14px;padding:11px;font-weight:700;color:var(--mute);cursor:pointer}
+.tabs button.on{background:var(--leaf);color:var(--ink)}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+.logo i{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.logo svg{width:24px;height:24px}
+.av{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;font-weight:800;color:var(--ink);flex-shrink:0}
+.pill{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;white-space:nowrap}
+.pill.offen{color:var(--amber);border-color:#F5C76B66}.pill.uebernommen{color:var(--leaf);border-color:#8FE3A080}.pill.erledigt{background:var(--leaf);color:var(--ink);border-color:var(--leaf)}
+nav.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#1B1E21e6;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.bar div{max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.bar a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;font-size:12px;font-weight:600;color:var(--mute);text-decoration:none}
+nav.bar a.on{color:var(--leaf)}nav.bar svg{width:24px;height:24px}
+.hero{display:grid;gap:48px;align-items:center;padding:56px 0 72px}
+.hero h1{font-size:clamp(40px,8vw,64px);line-height:1.05}
+.feat{display:grid;gap:16px;padding-bottom:80px}
+@media(min-width:760px){.hero{grid-template-columns:1fr 1fr}.feat{grid-template-columns:repeat(3,1fr)}}
+.list>*+*{border-top:1px solid var(--line)}
+.sep{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px}.sep:before,.sep:after{content:"";height:1px;flex:1;background:var(--line)}
+.dayrow{display:flex;flex-wrap:wrap;gap:8px}.ic{width:1.2em;height:1.2em;flex-shrink:0}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}.av svg{width:55%;height:55%}
+</style></head>
+<body><div id="app"></div>
+<script>
+const PAW='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="5.5" cy="10" rx="2.2" ry="2.8"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="18.5" cy="10" rx="2.2" ry="2.8"/><path d="M12 11c-3 0-6 3.2-6 6 0 2 1.6 3 3.4 3 1 0 1.8-.5 2.6-.5s1.6.5 2.6.5c1.8 0 3.4-1 3.4-3 0-2.8-3-6-6-6z"/></svg>';
+const LOGO='<div class="logo"><i>'+PAW+'</i>DogDuty</div>';
+const P={pee:'<path d="M12 3c3 4.5 5.5 7.5 5.5 10.5a5.5 5.5 0 01-11 0C6.5 10.5 9 7.5 12 3z"/>',poop:'<path d="M12 3c2 1.5 2.5 3 1.5 4.5 2 .3 3.5 1.6 3.5 3.3 2 .5 3 1.8 3 3.4 0 2.2-2 3.8-4.5 3.8h-7C6 18 4 16.4 4 14.2c0-1.6 1-2.9 3-3.4 0-1.7 1.5-3 3.5-3.3C9.5 6 10.5 4.5 12 3z"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.3 1.5M4.5 5.5L7.5 3M19.5 5.5L16.5 3"/>'};
+const ic=(k,c)=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:'+(c||'currentColor')+'">'+P[k]+'</svg>';
+const dot=c=>'<span class="dot" style="background:'+c+'"></span>';
+const ME='tim',DAYS=['Heute','Morgen','Fr','Sa','So','Mo','Di'],LBL={geplant:'Geplant',offen:'Offen',uebernommen:'Übernommen',erledigt:'Erledigt'};
+const M=[{id:'tim',n:'Tim',r:'Admin',c:'#8FE3A0'},{id:'lena',n:'Lena',r:'Admin',c:'#9CC8FF'},{id:'noah',n:'Noah',r:'Mitglied',c:'#FFD27A'}];
+const nm=id=>(M.find(m=>m.id===id)||{n:'Niemand eingetragen'}).n;
+const S={dog:{n:'Bruno',breed:'Labrador Mix',age:'4 Jahre'},grp:{n:'Familie Berger',code:'BRUNO-7K2P'},view:'tag',day:0,tab:'new',plan:false,pd:0,pt:'18:00',pw:'tim',pl:'Abendrunde',dur:'30 Min',pee:false,poop:false,note:'',copied:false,
+walks:[
+{id:1,l:'Morgenrunde',t:'07:30',d:0,w:'lena',s:'erledigt',pee:1,poop:1},
+{id:2,l:'Mittagsrunde',t:'13:15',d:0,w:'noah',s:'erledigt',pee:1,poop:0},
+{id:3,l:'Abendrunde',t:'18:00',d:0,w:'tim',s:'uebernommen'},
+{id:4,l:'Nachtrunde',t:'21:30',d:0,s:'offen'},
+{id:5,l:'Morgenrunde',t:'07:30',d:1,w:'tim',s:'geplant'},
+{id:6,l:'Mittagsrunde',t:'13:00',d:1,s:'offen'},
+{id:7,l:'Abendrunde',t:'18:30',d:1,w:'lena',s:'geplant'},
+{id:8,l:'Morgenrunde',t:'07:30',d:2,w:'noah',s:'geplant'},
+{id:9,l:'Abendrunde',t:'18:00',d:2,w:'tim',s:'geplant'}]};
+const IC={'':'',home:'M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z',calendar:'M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',walk:'M5 12h14M13 6l6 6-6 6',group:'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5'};
+const NAV=[['home','Home'],['calendar','Kalender'],['walk','Runde'],['group','Gruppe']];
+const shell=(r,body)=>'<div class="wrap stack">'+body+'</div><nav class="bar" aria-label="Hauptnavigation"><div>'+NAV.map(([k,l])=>'<a href="#/'+k+'"'+(k===r?' class="on" aria-current="page"':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="'+IC[k]+'"/></svg>'+l+'</a>').join('')+'</div></nav>';
+const center=b=>'<div class="wrap stack" style="min-height:100dvh;align-content:center;gap:24px">'+b+'</div>';
+
+function auth(reg){return center(LOGO+'<div><h1>'+(reg?'Konto erstellen':'Willkommen zurück')+'</h1><p class="mute" style="margin-top:8px">'+(reg?'In einer Minute startklar.':'Schau nach, wer heute mit dem Hund geht.')+'</p></div>'+
+'<div class="stack" style="gap:12px"><a class="btn ghost" href="#/setup">Weiter mit Google</a><a class="btn ghost" href="#/setup">Weiter mit Apple</a></div><div class="sep">oder mit E-Mail</div>'+
+'<form class="stack" style="gap:12px" data-f="auth'+(reg?'r':'l')+'">'+(reg?'<input class="input" placeholder="Dein Name" autocomplete="name" required>':'')+'<input class="input" type="email" placeholder="E-Mail" autocomplete="email" required><input class="input" type="password" placeholder="Passwort" minlength="8" autocomplete="'+(reg?'new':'current')+'-password" required><button class="btn">'+(reg?'Konto erstellen':'Anmelden')+'</button></form>'+
+'<p class="mute sm" style="text-align:center">'+(reg?'Schon dabei? <a class="leaf b" href="#/login">Anmelden</a>':'Neu hier? <a class="leaf b" href="#/register">Konto erstellen</a>')+'</p>')}
+
+const R={
+'':()=>'<div class="wide"><header class="row sp" style="padding:24px 0">'+LOGO+'<div class="row" style="gap:8px"><a class="sm b mute" href="#/login" style="padding:8px 12px;text-decoration:none">Anmelden</a><a class="btn auto sm" style="padding:10px 16px" href="#/register">Kostenlos starten</a></div></header>'+
+'<section class="hero"><div><h1>Wer geht mit dem Hund?</h1><p class="leaf b" style="font-size:24px;margin-top:20px">DogDuty weiß es.</p><p class="mute" style="font-size:18px;margin:20px 0 32px;max-width:420px">Die Gassi-Planung für Familien, Paare und WGs. Fair, transparent und ohne Nachfragen im Gruppenchat.</p><div class="row" style="flex-wrap:wrap"><a class="btn auto" href="#/register">Gruppe erstellen</a><a class="btn ghost auto" href="#/home">Demo ansehen</a></div></div>'+
+'<div class="card stack" style="max-width:360px;width:100%;margin:auto;box-shadow:0 24px 60px #0008"><div class="row sp"><div><p class="b" style="font-size:26px">Bruno</p><p class="leaf sm">'+dot('var(--leaf)')+'Gut versorgt</p></div><span class="av" style="width:56px;height:56px;background:var(--ink);color:#fff">'+PAW+'</span></div><div style="background:var(--ink);border-radius:18px;padding:16px"><p class="mute sm">Nächste Runde</p><p class="b" style="font-size:30px">18:00 Uhr</p><p class="mute">Tim ist dran</p></div><div class="btn">ICH GEHE</div></div></section>'+
+'<section class="feat">'+[['Ein Blick, eine Antwort','Du siehst sofort, wer als Nächstes mit dem Hund rausgeht.'],['Runden tauschen','Kannst du nicht? Ein Tipp, und die Gruppe wird gefragt.'],['Fair verteilt','Jede erledigte Runde wird festgehalten. Keine Diskussionen mehr.']].map(f=>'<div class="card"><h2 style="font-size:18px">'+f[0]+'</h2><p class="mute" style="margin-top:8px">'+f[1]+'</p></div>').join('')+'</section></div>',
+login:()=>auth(false),register:()=>auth(true),
+setup:()=>center('<div><p class="mute sm">Schritt 1 von 2</p><h1 style="margin-top:4px">Deine Gruppe</h1><p class="mute" style="margin-top:8px">Erstelle eine neue Gruppe oder tritt mit einem Einladungscode bei.</p></div><div class="tabs" role="tablist"><button role="tab" data-a="tab" data-v="new" class="'+(S.tab=='new'?'on':'')+'">Erstellen</button><button role="tab" data-a="tab" data-v="join" class="'+(S.tab=='join'?'on':'')+'">Beitreten</button></div>'+
+'<form class="stack" data-f="setup">'+(S.tab=='new'?'<input class="input" name="g" placeholder="Gruppenname, z. B. Familie Berger" required>':'<input class="input" placeholder="Einladungscode, z. B. BRUNO-7K2P" style="text-transform:uppercase;letter-spacing:.1em" required>')+'<button class="btn">'+(S.tab=='new'?'Weiter':'Gruppe beitreten')+'</button></form>'),
+dog:()=>center('<div><p class="mute sm">Schritt 2 von 2</p><h1 style="margin-top:4px">Wer ist dein Hund?</h1></div><form class="stack" data-f="dog"><label class="card" style="width:120px;height:120px;border-radius:50%;margin:auto;display:grid;place-items:center;text-align:center;border-style:dashed;color:var(--mute);font-size:14px;cursor:pointer"><input type="file" accept="image/*" hidden>Foto<br>hinzufügen</label><input class="input" name="n" placeholder="Name" required><input class="input" name="a" placeholder="Alter (optional)"><input class="input" name="b" placeholder="Rasse (optional)"><button class="btn">Los geht’s</button></form>'),
+home:()=>{const t=S.walks.filter(w=>w.d==0),dn=t.filter(w=>w.s=='erledigt'),nx=t.find(w=>w.s!='erledigt'),op=t.some(w=>w.s=='offen'),
+pe=dn.reduce((a,w)=>a+(w.pee||0),0),po=dn.reduce((a,w)=>a+(w.poop||0),0),last=dn[dn.length-1];
+return shell('home','<header class="row sp"><div><h1 style="font-size:38px">'+S.dog.n+'</h1><p style="font-size:18px;font-weight:600;margin-top:4px">'+dot(op?'var(--amber)':'var(--leaf)')+(op?'Aufmerksamkeit':'Gut versorgt')+'</p></div><span class="av" style="width:64px;height:64px;font-size:32px;background:var(--card);border:1px solid var(--line);color:#fff">'+PAW+'</span></header>'+
+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="card" style="padding:16px"><p class="mute sm">Letzte Runde</p><p class="b" style="font-size:24px;margin-top:4px">'+(last?last.t+' Uhr':'–')+'</p></div><div class="card" style="padding:16px;border-color:#8FE3A066"><p class="mute sm">Nächste Runde</p><p class="b leaf" style="font-size:24px;margin-top:4px">'+(nx?nx.t+' Uhr':'–')+'</p></div></div>'+
+(nx?'<div class="card row"><span class="av" style="background:var(--leaf)">'+(nx.w?nm(nx.w)[0]:'?')+'</span><div><p class="mute sm">'+nx.l+'</p><p class="b" style="font-size:20px">'+(nx.w?nm(nx.w):'Noch offen')+'</p></div></div>':'')+
+'<div class="card"><h2 style="font-size:17px">Heute</h2><div class="stack" style="gap:8px;margin-top:12px">'+t.map(w=>'<div class="row sp"><span class="row" style="gap:10px">'+(w.s=='erledigt'?ic('check','var(--leaf)'):ic('clock','var(--amber)'))+w.l+'</span><span class="mute">'+w.t+'</span></div>').join('')+'</div><div class="row b" style="gap:20px;border-top:1px solid var(--line);margin-top:16px;padding-top:16px"><span class="row" style="gap:6px">'+ic('pee','#7FC4FF')+'Pipi ×'+pe+'</span><span class="row" style="gap:6px">'+ic('poop','#D9A066')+'Kaka ×'+po+'</span></div></div>'+
+'<div class="stack" style="gap:12px">'+(nx&&nx.w==ME?'<a class="btn" href="#/walk">RUNDE DOKUMENTIEREN</a>':'<button class="btn" data-a="go">ICH GEHE</button>')+'<button class="btn ghost" data-a="cant">ICH KANN NICHT</button></div>')},
+calendar:()=>{const ds=S.view=='tag'?[S.day]:[0,1,2,3,4,5,6];
+return shell('calendar','<div class="row sp"><h1>Kalender</h1><button class="btn auto sm" style="padding:10px 16px" data-a="plan">'+(S.plan?'Schließen':'+ Runde einplanen')+'</button></div>'+(S.plan?planForm():'')+'<div class="tabs"><button data-a="view" data-v="tag" class="'+(S.view=='tag'?'on':'')+'">Tag</button><button data-a="view" data-v="woche" class="'+(S.view=='woche'?'on':'')+'">Woche</button></div>'+
+(S.view=='tag'?'<div class="dayrow">'+DAYS.map((d,i)=>'<button class="chip '+(S.day==i?'on':'')+'" data-a="day" data-v="'+i+'">'+d+'</button>').join('')+'</div>':'')+
+ds.map(d=>{const l=S.walks.filter(w=>w.d==d);return '<section class="stack" style="gap:12px">'+(S.view=='woche'?'<h2 class="mute sm">'+DAYS[d]+'</h2>':'')+(l.length?l.map(w=>'<article class="card row" style="padding:16px;gap:14px"><p class="b" style="font-size:20px;width:56px">'+w.t+'</p><div class="grow"><p class="b">'+w.l+'</p><p class="mute sm">'+nm(w.w)+'</p></div><div class="stack" style="gap:8px;justify-items:end"><span class="pill '+w.s+'">'+LBL[w.s]+'</span>'+(w.s=='offen'?'<button class="leaf b sm" style="background:none;border:0;cursor:pointer" data-a="take" data-v="'+w.id+'">Übernehmen</button>':'')+((w.s=='uebernommen'||w.s=='geplant')&&w.w==ME?'<button class="mute sm" style="background:none;border:0;cursor:pointer;text-decoration:underline" data-a="free" data-v="'+w.id+'">Freigeben</button>':'')+'</div></article>').join(''):'<p class="card mute">Keine Runden geplant.</p>')+'</section>'}).join(''))},
+walk:()=>shell('walk','<div><h1>Runde dokumentieren</h1><p class="mute" style="margin-top:4px">Wie war der Spaziergang mit '+S.dog.n+'?</p></div>'+
+'<section class="stack" style="gap:12px"><h2 style="font-size:16px">Dauer</h2><div class="row" style="flex-wrap:wrap;gap:8px">'+['10 Min','20 Min','30 Min','45 Min','60+ Min'].map(d=>'<button class="chip '+(S.dur==d?'on':'')+'" data-a="dur" data-v="'+d+'" aria-pressed="'+(S.dur==d)+'">'+d+'</button>').join('')+'</div></section>'+
+'<section class="stack" style="gap:12px"><h2 style="font-size:16px">Geschäft</h2><div class="row"><button class="chip grow '+(S.pee?'on':'')+'" style="padding:16px;font-size:16px" data-a="pee" aria-pressed="'+S.pee+'"><span class="row" style="justify-content:center;gap:8px">'+ic('pee')+'Pipi</span></button><button class="chip grow '+(S.poop?'on':'')+'" style="padding:16px;font-size:16px" data-a="poop" aria-pressed="'+S.poop+'"><span class="row" style="justify-content:center;gap:8px">'+ic('poop')+'Kaka</span></button></div>'+(!S.pee&&!S.poop?'<p class="mute sm">Ohne Auswahl wird „Nichts“ gespeichert.</p>':'')+'</section>'+
+'<section class="stack" style="gap:12px"><h2 style="font-size:16px">Notiz (optional)</h2><textarea class="input" id="note" placeholder="z. B. Hat mit einem Labrador gespielt">'+S.note+'</textarea></section><button class="btn" data-a="save">Runde speichern</button>'),
+group:()=>{const adm=M.find(m=>m.id==ME).r=='Admin';return shell('group','<h1>'+S.grp.n+'</h1><div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;font-size:32px;background:var(--ink);color:#fff">'+PAW+'</span><div class="grow"><p class="b" style="font-size:20px">'+S.dog.n+'</p><p class="mute sm">'+S.dog.breed+' · '+S.dog.age+'</p></div>'+(adm?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':'')+'</div>'+
+'<div class="card"><p class="mute sm">Einladungscode</p><div class="row sp" style="margin-top:8px"><p class="b" style="font-size:24px;letter-spacing:.1em">'+S.grp.code+'</p><button class="btn ghost auto sm" style="padding:8px 16px" data-a="copy">'+(S.copied?'Kopiert':'Kopieren')+'</button></div></div>'+
+'<div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">'+M.map(m=>'<div class="row" style="padding:12px 0"><span class="av" style="background:'+m.c+'">'+m.n[0]+'</span><span class="grow b">'+m.n+(m.id==ME?' (du)':'')+'</span><span class="mute sm">'+m.r+'</span></div>').join('')+'</div>'+(adm?'<button class="btn ghost" style="margin-top:8px">Mitglied einladen</button>':'')+'</div><a class="mute sm" href="#/" style="text-align:center;padding:8px">Abmelden</a>')}
+};
+function render(keep){const k=(location.hash||'#/').slice(2);document.getElementById('app').innerHTML=(R[k]||R[''])();if(!keep)scrollTo(0,0)}
+function planForm(){const chip=(on,a,v,t)=>'<button type="button" class="chip '+(on?'on':'')+'" data-a="'+a+'" data-v="'+v+'" aria-pressed="'+on+'">'+t+'</button>',lab=t=>'<p class="mute sm" style="margin-bottom:8px">'+t+'</p>';
+return '<form class="card stack" data-f="plan" style="gap:16px"><h2 style="font-size:17px">Neue Runde einplanen</h2><div>'+lab('Tag')+'<div class="dayrow">'+DAYS.map((d,i)=>chip(S.pd==i,'pd',i,d)).join('')+'</div></div><div>'+lab('Art der Runde')+'<div class="row" style="flex-wrap:wrap;gap:8px">'+['Morgenrunde','Mittagsrunde','Abendrunde','Nachtrunde'].map(l=>chip(S.pl==l,'pl',l,l)).join('')+'</div></div><div>'+lab('Uhrzeit')+'<input class="input" type="time" name="t" value="'+S.pt+'" required></div><div>'+lab('Wer geht?')+'<div class="row" style="flex-wrap:wrap;gap:8px">'+[['tim','Ich'],['lena','Lena'],['noah','Noah'],['','Offen lassen']].map(p=>chip(S.pw==p[0],'pw',p[0],p[1])).join('')+'</div></div><button class="btn">Runde speichern</button></form>'}
+const nxt=()=>S.walks.find(w=>w.d==0&&w.s!='erledigt');
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v,w=S.walks.find(x=>x.id==v);
+if(a=='tab')S.tab=v;if(a=='plan')S.plan=!S.plan;if(a=='pd')S.pd=+v;if(a=='pw')S.pw=v;if(a=='pl'){S.pl=v;S.pt={Morgenrunde:'07:30',Mittagsrunde:'13:00',Abendrunde:'18:00',Nachtrunde:'21:30'}[v]}if(a=='view')S.view=v;if(a=='day')S.day=+v;if(a=='dur')S.dur=v;if(a=='pee')S.pee=!S.pee;if(a=='poop')S.poop=!S.poop;
+if(a=='go'&&nxt()){nxt().w=ME;nxt().s='uebernommen'}
+if(a=='cant'&&nxt()){nxt().w=undefined;nxt().s='offen'}
+if(a=='take'){w.w=ME;w.s='uebernommen'}if(a=='free'){w.w=undefined;w.s='offen'}
+if(a=='copy'){navigator.clipboard&&navigator.clipboard.writeText(S.grp.code).catch(()=>{});S.copied=true;setTimeout(()=>{S.copied=false;render(1)},1800)}
+if(a=='save'){const n=S.walks.find(x=>x.d==0&&x.w==ME&&x.s!='erledigt');if(n){n.s='erledigt';n.pee=+S.pee;n.poop=+S.poop}S.pee=S.poop=false;S.note='';location.hash='#/home';return}
+render(1)});
+document.addEventListener('input',e=>{if(e.target.id=='note')S.note=e.target.value;if(e.target.name=='t')S.pt=e.target.value});
+document.addEventListener('submit',e=>{e.preventDefault();const f=e.target.dataset.f,d=new FormData(e.target);
+if(f=='authl'||f=='authr')location.hash='#/setup';if(f=='plan'){S.pt=d.get('t');S.walks.push({id:Date.now(),l:S.pl,t:S.pt,d:S.pd,w:S.pw||undefined,s:S.pw?'geplant':'offen'});S.walks.sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));S.plan=false;S.view='tag';S.day=S.pd;render(1);return}
+if(f=='setup'){if(S.tab=='new'){if(d.get('g')){S.grp.n=d.get('g');S.grp.code=d.get('g').trim().split(' ').pop().slice(0,5).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}location.hash='#/dog'}else location.hash='#/home'}
+if(f=='dog'){S.dog={n:d.get('n'),age:d.get('a')||'–',breed:d.get('b')||'–'};location.hash='#/home'}});
+addEventListener('hashchange',()=>render());render();
+</script></body></html>
