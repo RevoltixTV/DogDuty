@@ -64,6 +64,7 @@ nav.bar a.on{color:var(--leaf)}nav.bar svg{width:24px;height:24px}
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,OAuthProvider,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getMessaging,getToken,isSupported}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 const cfg={apiKey:"AIzaSyA-vyQbJjdlt2HHlxJaXICoDY00X2DFA-0",authDomain:"dogduty-7cc17.firebaseapp.com",projectId:"dogduty-7cc17",appId:"1:164287072195:web:4cf49d6b423a6c07639f76"};
 const PAW='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="5.5" cy="10" rx="2.2" ry="2.8"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="18.5" cy="10" rx="2.2" ry="2.8"/><path d="M12 11c-3 0-6 3.2-6 6 0 2 1.6 3 3.4 3 1 0 1.8-.5 2.6-.5s1.6.5 2.6.5c1.8 0 3.4-1 3.4-3 0-2.8-3-6-6-6z"/></svg>';
 const LOGO='<div class="logo"><i>'+PAW+'</i>DogDuty</div>';
@@ -72,6 +73,15 @@ const ic=(k,c)=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="current
 const dot=c=>'<span class="dot" style="background:'+c+'"></span>';
 const IC={'':'',home:'M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z',calendar:'M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',walk:'M5 12h14M13 6l6 6-6 6',group:'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5'};
 const NAV=[['home','Home'],['calendar','Kalender'],['walk','Runde'],['group','Gruppe']];
+/* Zentrale Versionsverwaltung: nur HIER ändern */
+const APP_VERSION='0.4.0';
+const NOTES='Neu: Benachrichtigungen für Gassirunden, Versionsanzeige und kleine Verbesserungen.';
+/* Web-Push-Schlüssel aus Firebase: Projekteinstellungen > Cloud Messaging > Web-Push-Zertifikate */
+const VAPID_KEY='';
+const updModal=()=>`<div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:20;background:#000b;display:grid;place-items:center;padding:24px"><div class="card stack" style="max-width:360px;width:100%;text-align:center"><p style="font-size:40px">🎉</p><h2 style="font-size:22px">DogDuty wurde aktualisiert</h2><p class="b leaf">Version ${APP_VERSION}</p><p class="mute">${NOTES}</p><button class="btn" data-a="closeupd">Schließen</button></div></div>`;
+const notifCard=()=>{if(isDemo())return'';const st=!('Notification' in window)?'x':Notification.permission,
+ tx={x:'Dein Gerät unterstützt keine Benachrichtigungen. Auf dem iPhone: App zuerst zum Home-Bildschirm hinzufügen.',default:'Erhalte Erinnerungen 30 Minuten vor deiner Runde und zum Start, und erfahre, wenn jemand eine Runde freigibt oder übernimmt.',granted:'Aktiv. Du erhältst Erinnerungen vor und zum Start deiner Runden.',denied:'Blockiert. Erlaube Mitteilungen für DogDuty in den Geräte-Einstellungen.'}[st];
+ return `<div class="card stack" style="gap:12px"><h2 style="font-size:17px">Benachrichtigungen</h2><p class="mute sm">${tx}</p>${st=='default'?'<button class="btn" data-a="notif">Benachrichtigungen aktivieren</button>':''}</div>`};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 const iso=(o=0)=>{const t=new Date();t.setDate(t.getDate()+o);return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`};
@@ -83,6 +93,7 @@ const TIMES={Morgenrunde:'07:30',Mittagsrunde:'13:00',Abendrunde:'18:00',Nachtru
 const COL=['#8FE3A0','#9CC8FF','#FFD27A','#F2A6C9','#C3A6F2'];
 const S={view:'tag',day:0,tab:'new',plan:false,pd:0,pt:'18:00',pw:'me',pl:'Abendrunde',dur:'30 Min',pee:false,poop:false,note:'',copied:false,err:'',profile:{},walks:[]};
 const isDemo=()=>!S.user&&!!S.demo;
+try{const sv=localStorage.getItem('dd_seen');if(sv&&sv!=APP_VERSION)S.upd=true;if(!sv)localStorage.setItem('dd_seen',APP_VERSION)}catch(e){}
 const err=()=>S.err?`<p role="alert" style="color:#FF9B9B;font-size:14px">${esc(S.err)}</p>`:'';
 const chip=(on,a,v,t)=>`<button type="button" class="chip ${on?'on':''}" data-a="${a}" data-v="${esc(v)}" aria-pressed="${on}">${t}</button>`;
 const center=b=>`<div class="wrap stack" style="min-height:100dvh;align-content:center;gap:24px">${b}</div>`;
@@ -110,10 +121,10 @@ async function sync(u){const ref=doc(db,'users',u.uid),s=await getDoc(ref);
  if(s.exists()){await updateDoc(ref,{lastLogin:serverTimestamp()});return{groupId:null,...s.data()}}
  const d={uid:u.uid,name:pend||u.displayName||(u.email||'').split('@')[0]||'Nutzer',email:u.email||'',provider:PV[u.providerData[0]?.providerId]||'email',createdAt:serverTimestamp(),lastLogin:serverTimestamp(),groupId:null};
  await setDoc(ref,d);return d}
-function detach(){unsub.forEach(f=>f());unsub=[];S.group=null;S.walks=[];S.gl=false;S.gerr=''}
+function detach(){unsub.forEach(f=>f());unsub=[];S.group=null;S.walks=[];S.gl=false;S.gerr='';S.wInit=false}
 function attach(id){detach();
  unsub.push(onSnapshot(doc(db,'groups',id),s=>{S.group=s.exists()?s.data():null;S.gerr=s.exists()?'':'Diese Gruppe existiert nicht mehr.';S.gl=true;soft()},()=>{S.gerr='Kein Zugriff auf die Gruppe.';S.gl=true;soft()}));
- unsub.push(onSnapshot(collection(db,'groups',id,'walks'),s=>{S.walks=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));soft()},()=>{}))}
+ unsub.push(onSnapshot(collection(db,'groups',id,'walks'),s=>{const nw=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));if(S.wInit)events(S.walks,nw);S.wInit=true;S.walks=nw;soft()},()=>{}))}
 async function createGroup(name){const u=S.user,g=doc(collection(db,'groups')),code=mkCode();
  await setDoc(g,{name,code,ownerId:u.uid,memberIds:[u.uid],members:{[u.uid]:{name:S.profile.name||'Ich',role:'Admin'}},dog:null,createdAt:serverTimestamp()});
  await setDoc(doc(db,'invites',code),{gid:g.id});
@@ -125,12 +136,27 @@ async function joinGroup(code){const u=S.user,s=await getDoc(doc(db,'invites',co
 const saveDog=async d=>{if(isDemo()){S.demo.dog=d;return}await updateDoc(doc(db,'groups',gid()),{dog:d})};
 const upd=async(id,p)=>{if(isDemo()){Object.assign(S.demo.walks.find(w=>w.id==id),p);return}await updateDoc(doc(db,'groups',gid(),'walks',String(id)),p)};
 const addWalk=async w=>{if(isDemo()){S.demo.walks.push({...w,id:Date.now()});S.demo.walks.sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));return}await addDoc(collection(db,'groups',gid(),'walks'),{...w,createdBy:S.user.uid,createdAt:serverTimestamp()})};
+/* ---------- Benachrichtigungen ---------- */
+function toast(t){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.setAttribute('role','status');el.style.cssText='position:fixed;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:30;max-width:440px;margin:0 auto;background:var(--card);border:1px solid var(--leaf);border-radius:18px;padding:14px 16px';document.body.appendChild(el)}el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,7000)}
+async function notify(title,body,tag){if('Notification' in window&&Notification.permission=='granted'){try{const r=await navigator.serviceWorker.ready;await r.showNotification(title,{body,tag,icon:'icon-192.png',badge:'icon-192.png',data:{url:'./#/home'}});return}catch(e){}}toast(title+' – '+body)}
+function events(oldL,nw){const me=S.user?.uid,g=S.group,dn=g?.dog?.n||'deinem Hund',n=id=>g?.members?.[id]?.name||'Jemand',om=new Map(oldL.map(w=>[w.id,w]));
+ nw.forEach(w=>{const o=om.get(w.id);if(!o)return;
+  if(o.who&&!w.who&&w.s=='offen'&&o.who!=me)notify('🐾 DogDuty',`${n(o.who)} kann die Runde nicht wahrnehmen. Kannst du übernehmen?`,w.id+'-free');
+  else if(w.s=='uebernommen'&&w.who&&w.who!=me&&(o.s!='uebernommen'||o.who!=w.who))notify('🐾 DogDuty',`🎉 ${n(w.who)} übernimmt die Runde für ${dn}.`,w.id+'-take')})}
+function tick(){const X=cur();if(!X||isDemo())return;const now=new Date(),t=iso();
+ for(const w of X.walks){if(w.who!=X.me||w.s=='erledigt'||w.d!=t)continue;
+  const [h,m]=w.t.split(':'),at=new Date();at.setHours(+h,+m,0,0);const min=(at-now)/60000;
+  const f=(k,txt)=>{const key=`dd_n_${w.id}_${k}`;try{if(localStorage.getItem(key))return;localStorage.setItem(key,1)}catch(e){}notify('🐾 DogDuty',txt,`${w.id}-${k}`)};
+  if(min<=30&&min>25)f('30','Deine Gassirunde beginnt in 30 Minuten.');
+  if(min<=0&&min>-10)f('0',`Du bist jetzt mit ${X.dog?.n||'deinem Hund'} dran.`)}}
+async function registerToken(){if(!VAPID_KEY||!S.user||!('serviceWorker' in navigator)||!(await isSupported()))return;const reg=await navigator.serviceWorker.ready,tok=await getToken(getMessaging(app),{vapidKey:VAPID_KEY,serviceWorkerRegistration:reg});if(tok)await updateDoc(doc(db,'users',S.user.uid),{fcmTokens:arrayUnion(tok)})}
+async function enablePush(){if(!('Notification' in window))return;const p=await Notification.requestPermission();if(p=='granted')try{await registerToken()}catch(e){console.error(e)}}
 const AUTH={
  async social(p){S.err='';try{const v=p=='google'?new GoogleAuthProvider():new OAuthProvider('apple.com');if(p=='apple'){v.addScope('email');v.addScope('name')}await signInWithPopup(auth,v)}catch(e){S.err=msg(e);render(1)}},
  async email(reg,n,e,p){S.err='';try{if(reg){pend=n;await createUserWithEmailAndPassword(auth,e,p)}else await signInWithEmailAndPassword(auth,e,p)}catch(x){S.err=msg(x);render(1)}},
  async logout(){await signOut(auth);location.hash='#/'}};
 onAuthStateChanged(auth,async u=>{detach();S.user=u;S.profile={};S.demo=null;
- if(u){try{S.profile=await sync(u)}catch(e){console.error(e);S.err=msg(e)}if(S.profile.groupId)attach(S.profile.groupId)}
+ if(u){try{S.profile=await sync(u)}catch(e){console.error(e);S.err=msg(e)}if(S.profile.groupId)attach(S.profile.groupId);if('Notification' in window&&Notification.permission=='granted')registerToken().catch(()=>{})}
  S.ready=true;render()});
 
 /* ---------- Ansichten ---------- */
@@ -167,7 +193,7 @@ group:()=>{const X=cur(),d=X.dog;
  return shell('group',`<h1>${esc(X.grp.n)}</h1>${d?`<div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;background:var(--ink);color:#fff">${PAW}</span><div class="grow"><p class="b" style="font-size:20px">${esc(d.n)}</p><p class="mute sm">${esc([d.breed,d.age].filter(Boolean).join(' · ')||'Keine weiteren Angaben')}</p></div>${X.admin?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':''}</div>`:X.admin?'<a class="btn ghost" href="#/dog">Hund hinzufügen</a>':'<p class="card mute">Noch kein Hund angelegt.</p>'}
 <div class="card stack" style="gap:12px"><p class="mute sm">Einladungscode</p><div class="row sp"><p class="b" style="font-size:24px;letter-spacing:.1em">${esc(X.grp.code)}</p><button class="btn ghost auto sm" style="padding:8px 16px" data-a="copy">${S.copied?'Kopiert':'Kopieren'}</button></div><button class="btn" data-a="share">Mitglieder einladen</button></div>
 <div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">${X.members.map(m=>`<div class="row" style="padding:12px 0"><span class="av" style="background:${m.c}">${esc(m[ 'n'][0])}</span><span class="grow b">${esc(m.n)}${m.id==X.me?' (du)':''}</span><span class="mute sm">${m.r}</span></div>`).join('')}</div></div>
-${isDemo()?'<a class="btn ghost" href="#/" data-a="enddemo">Demo beenden</a>':'<button class="mute sm" data-a="logout" style="background:none;border:0;padding:8px;cursor:pointer">Abmelden</button>'}`)}
+${notifCard()}${isDemo()?'<a class="btn ghost" href="#/" data-a="enddemo">Demo beenden</a>':'<button class="mute sm" data-a="logout" style="background:none;border:0;padding:8px;cursor:pointer">Abmelden</button>'}<div style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px;text-align:center"><p class="b">DogDuty</p><p class="mute sm">Version ${APP_VERSION}</p></div>`)}
 };
 const go=h=>{location.hash=h};
 function render(keep){const A=document.getElementById('app'),k=(location.hash||'#/').slice(2),load=m=>{A.innerHTML=center(`<p class="mute" style="text-align:center">${m}</p>`)};
@@ -180,11 +206,12 @@ function render(keep){const A=document.getElementById('app'),k=(location.hash||'
    if(S.profile.groupId&&!S.gl)return load('Gruppe wird geladen …');
    if(S.profile.groupId&&(S.gerr||!cur())){A.innerHTML=center(`<p>${esc(S.gerr||'Gruppe konnte nicht geladen werden.')}</p><button class="btn ghost" data-a="logout">Abmelden</button>`);return}}
   else if(k=='setup')return go('#/home')}
- A.innerHTML=(R[k]||R[''])();if(!keep)scrollTo(0,0)}
+ A.innerHTML=(R[k]||R[''])()+(S.upd?updModal():'');if(!keep)scrollTo(0,0)}
 
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v;
  try{const X=cur(),nx=X&&X.walks.find(w=>w.s!='erledigt'&&w.d>=iso());
  switch(a){
+ case'closeupd':try{localStorage.setItem('dd_seen',APP_VERSION)}catch(e){}S.upd=false;break;case'notif':await enablePush();break;
  case'google':case'apple':return AUTH.social(a);
  case'logout':return AUTH.logout();
  case'demo':if(!S.user)S.demo=mkDemo();return;
@@ -211,8 +238,8 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
  if(f=='plan'){const X=cur(),who=S.pw=='me'?X.me:S.pw||null;S.pt=d.get('t');await addWalk({l:S.pl,t:S.pt,d:iso(S.pd),who,s:who?'geplant':'offen'});S.plan=false;S.view='tag';S.day=S.pd}
  }catch(x){console.error(x);S.err=msg(x)}
  render(1)});
-addEventListener('hashchange',()=>render());
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+addEventListener('hashchange',()=>render());setInterval(tick,30000);
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js?v='+APP_VERSION).catch(()=>{}));
 setTimeout(()=>{if(!S.ready){S.ready=true;S.err='Der Anmeldedienst ist nicht erreichbar.';render()}},8000);
 
 </script></body></html>
