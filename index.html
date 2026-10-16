@@ -49,111 +49,158 @@ nav.bar a.on{color:var(--leaf)}nav.bar svg{width:24px;height:24px}
 .dayrow{display:flex;flex-wrap:wrap;gap:8px}.ic{width:1.2em;height:1.2em;flex-shrink:0}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}.av svg{width:55%;height:55%}
 </style></head>
 <body><div id="app"></div>
-<script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,OAuthProvider,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyA-vyQbJjdlt2HHlxJaXICoDY00X2DFA-0",authDomain:"dogduty-7cc17.firebaseapp.com",projectId:"dogduty-7cc17",appId:"1:164287072195:web:4cf49d6b423a6c07639f76"};
 const PAW='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="5.5" cy="10" rx="2.2" ry="2.8"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="18.5" cy="10" rx="2.2" ry="2.8"/><path d="M12 11c-3 0-6 3.2-6 6 0 2 1.6 3 3.4 3 1 0 1.8-.5 2.6-.5s1.6.5 2.6.5c1.8 0 3.4-1 3.4-3 0-2.8-3-6-6-6z"/></svg>';
 const LOGO='<div class="logo"><i>'+PAW+'</i>DogDuty</div>';
 const P={pee:'<path d="M12 3c3 4.5 5.5 7.5 5.5 10.5a5.5 5.5 0 01-11 0C6.5 10.5 9 7.5 12 3z"/>',poop:'<path d="M12 3c2 1.5 2.5 3 1.5 4.5 2 .3 3.5 1.6 3.5 3.3 2 .5 3 1.8 3 3.4 0 2.2-2 3.8-4.5 3.8h-7C6 18 4 16.4 4 14.2c0-1.6 1-2.9 3-3.4 0-1.7 1.5-3 3.5-3.3C9.5 6 10.5 4.5 12 3z"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.3 1.5M4.5 5.5L7.5 3M19.5 5.5L16.5 3"/>'};
 const ic=(k,c)=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:'+(c||'currentColor')+'">'+P[k]+'</svg>';
 const dot=c=>'<span class="dot" style="background:'+c+'"></span>';
-const ME='tim',DAYS=['Heute','Morgen','Fr','Sa','So','Mo','Di'],LBL={geplant:'Geplant',offen:'Offen',uebernommen:'Übernommen',erledigt:'Erledigt'};
-const M=[{id:'tim',n:'Tim',r:'Admin',c:'#8FE3A0'},{id:'lena',n:'Lena',r:'Admin',c:'#9CC8FF'},{id:'noah',n:'Noah',r:'Mitglied',c:'#FFD27A'}];
-const nm=id=>(M.find(m=>m.id===id)||{n:'Niemand eingetragen'}).n;
-const S={dog:{n:'Bruno',breed:'Labrador Mix',age:'4 Jahre'},grp:{n:'Familie Berger',code:'BRUNO-7K2P'},view:'tag',day:0,tab:'new',plan:false,pd:0,pt:'18:00',pw:'tim',pl:'Abendrunde',dur:'30 Min',pee:false,poop:false,note:'',copied:false,
-walks:[
-{id:1,l:'Morgenrunde',t:'07:30',d:0,w:'lena',s:'erledigt',pee:1,poop:1},
-{id:2,l:'Mittagsrunde',t:'13:15',d:0,w:'noah',s:'erledigt',pee:1,poop:0},
-{id:3,l:'Abendrunde',t:'18:00',d:0,w:'tim',s:'uebernommen'},
-{id:4,l:'Nachtrunde',t:'21:30',d:0,s:'offen'},
-{id:5,l:'Morgenrunde',t:'07:30',d:1,w:'tim',s:'geplant'},
-{id:6,l:'Mittagsrunde',t:'13:00',d:1,s:'offen'},
-{id:7,l:'Abendrunde',t:'18:30',d:1,w:'lena',s:'geplant'},
-{id:8,l:'Morgenrunde',t:'07:30',d:2,w:'noah',s:'geplant'},
-{id:9,l:'Abendrunde',t:'18:00',d:2,w:'tim',s:'geplant'}]};
 const IC={'':'',home:'M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z',calendar:'M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',walk:'M5 12h14M13 6l6 6-6 6',group:'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5'};
 const NAV=[['home','Home'],['calendar','Kalender'],['walk','Runde'],['group','Gruppe']];
-const shell=(r,body)=>'<div class="wrap stack">'+body+'</div><nav class="bar" aria-label="Hauptnavigation"><div>'+NAV.map(([k,l])=>'<a href="#/'+k+'"'+(k===r?' class="on" aria-current="page"':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="'+IC[k]+'"/></svg>'+l+'</a>').join('')+'</div></nav>';
-const center=b=>'<div class="wrap stack" style="min-height:100dvh;align-content:center;gap:24px">'+b+'</div>';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=(o=0)=>{const t=new Date();t.setDate(t.getDate()+o);return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`};
+const nowT=()=>{const t=new Date();return `${pad(t.getHours())}:${pad(t.getMinutes())}`};
+const dayLbl=o=>o==0?'Heute':o==1?'Morgen':new Date(iso(o)+'T12:00').toLocaleDateString('de-DE',{weekday:'short'});
+const fmt=w=>(w.d==iso()?'':w.d.slice(8,10)+'.'+w.d.slice(5,7)+'. ')+w.t+' Uhr';
+const LBL={geplant:'Geplant',offen:'Offen',uebernommen:'Übernommen',erledigt:'Erledigt'};
+const TIMES={Morgenrunde:'07:30',Mittagsrunde:'13:00',Abendrunde:'18:00',Nachtrunde:'21:30'};
+const COL=['#8FE3A0','#9CC8FF','#FFD27A','#F2A6C9','#C3A6F2'];
+const S={view:'tag',day:0,tab:'new',plan:false,pd:0,pt:'18:00',pw:'me',pl:'Abendrunde',dur:'30 Min',pee:false,poop:false,note:'',copied:false,err:'',profile:{},walks:[]};
+const isDemo=()=>!S.user&&!!S.demo;
+const err=()=>S.err?`<p role="alert" style="color:#FF9B9B;font-size:14px">${esc(S.err)}</p>`:'';
+const chip=(on,a,v,t)=>`<button type="button" class="chip ${on?'on':''}" data-a="${a}" data-v="${esc(v)}" aria-pressed="${on}">${t}</button>`;
+const center=b=>`<div class="wrap stack" style="min-height:100dvh;align-content:center;gap:24px">${b}</div>`;
+const shell=(r,b)=>`<div class="wrap stack">${isDemo()?'<div class="row sp pill" style="border-color:#F5C76B66;color:var(--amber)"><span>Demo-Modus · Beispieldaten</span><a href="#/" data-a="enddemo" style="text-decoration:underline">Beenden</a></div>':''}${b}</div><nav class="bar" aria-label="Hauptnavigation"><div>${NAV.map(([k,l])=>`<a href="#/${k}"${k===r?' class="on" aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[k]}"/></svg>${l}</a>`).join('')}</div></nav>`;
+/* Demo-Daten: nur im Demo-Modus, nur im Speicher, nie in Konten */
+const mkDemo=()=>({grp:{n:'Familie Berger',code:'DEMO-0000'},dog:{n:'Bruno',breed:'Labrador Mix',age:'4 Jahre'},me:'tim',admin:true,
+ members:[['tim','Tim','Admin'],['lena','Lena','Admin'],['noah','Noah','Mitglied']].map(([id,n,r],i)=>({id,n,r,c:COL[i]})),
+ walks:[['Morgenrunde','07:30',0,'lena','erledigt',1,1],['Mittagsrunde','13:15',0,'noah','erledigt',1,0],['Abendrunde','18:00',0,'tim','uebernommen'],['Nachtrunde','21:30',0,null,'offen'],['Morgenrunde','07:30',1,'tim','geplant'],['Abendrunde','18:30',1,'lena','geplant']].map(([l,t,o,who,s,pee,poop],i)=>({id:i+1,l,t,d:iso(o),who,s,pee,poop}))});
+/* Aktive Daten: Demo ODER echte Gruppe des angemeldeten Nutzers */
+const cur=()=>{if(isDemo())return S.demo;const g=S.group;if(!g||!S.user)return null;
+ return{grp:{n:g.name,code:g.code},dog:g.dog||null,me:S.user.uid,admin:g.members[S.user.uid]?.role=='Admin',walks:S.walks,
+ members:g.memberIds.map((id,i)=>({id,n:g.members[id]?.name||'?',r:g.members[id]?.role||'Mitglied',c:COL[i%5]}))}};
+const nm=(X,id)=>X.members.find(m=>m.id==id)?.n||'Niemand eingetragen';
 
-function auth(reg){return center(LOGO+'<div><h1>'+(reg?'Konto erstellen':'Willkommen zurück')+'</h1><p class="mute" style="margin-top:8px">'+(reg?'In einer Minute startklar.':'Schau nach, wer heute mit dem Hund geht.')+'</p></div>'+
-'<div class="stack" style="gap:12px"><button class="btn ghost" data-a="google">Mit Google fortfahren</button><button class="btn ghost" data-a="apple">Mit Apple fortfahren</button></div><div class="sep">oder mit E-Mail</div>'+(S.err?'<p role="alert" style="color:#FF9B9B;font-size:14px">'+S.err+'</p>':'')+
-'<form class="stack" style="gap:12px" data-f="auth'+(reg?'r':'l')+'">'+(reg?'<input class="input" name="n" placeholder="Dein Name" autocomplete="name" required>':'')+'<input class="input" name="e" type="email" placeholder="E-Mail" autocomplete="email" required><input class="input" name="p" type="password" placeholder="Passwort" minlength="8" autocomplete="'+(reg?'new':'current')+'-password" required><button class="btn">'+(reg?'Konto erstellen':'Anmelden')+'</button></form>'+
-'<p class="mute sm" style="text-align:center">'+(reg?'Schon dabei? <a class="leaf b" href="#/login">Anmelden</a>':'Neu hier? <a class="leaf b" href="#/register">Konto erstellen</a>')+'</p>')}
+/* ---------- Firebase ---------- */
+const E={'auth/invalid-credential':'E-Mail oder Passwort ist falsch.','auth/wrong-password':'E-Mail oder Passwort ist falsch.','auth/user-not-found':'E-Mail oder Passwort ist falsch.','auth/invalid-email':'Bitte gib eine gültige E-Mail ein.','auth/email-already-in-use':'Diese E-Mail ist schon registriert.','auth/weak-password':'Das Passwort ist zu schwach.','auth/popup-closed-by-user':'Anmeldung abgebrochen.','auth/cancelled-popup-request':'Anmeldung abgebrochen.','auth/popup-blocked':'Das Popup wurde blockiert. Bitte erlaube Popups.','auth/operation-not-allowed':'Diese Anmeldeart ist in Firebase noch nicht aktiviert.','auth/unauthorized-domain':'Diese Adresse ist in Firebase nicht freigegeben.','auth/too-many-requests':'Zu viele Versuche. Bitte warte kurz.','permission-denied':'Keine Berechtigung. Sind die neuen Firestore-Regeln veröffentlicht?','dd/not-found':'Diesen Einladungscode gibt es nicht.'};
+const msg=e=>E[e?.code]||'Das hat nicht geklappt. Bitte versuche es erneut.';
+const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+let pend=null,unsub=[];
+const PV={'google.com':'google','apple.com':'apple',password:'email'};
+const gid=()=>S.profile.groupId;
+const mkCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint8Array(8));let s='';r.forEach(x=>s+=a[x%a.length]);return s.slice(0,4)+'-'+s.slice(4)};
+const soft=()=>{const el=document.activeElement;if(el&&/INPUT|TEXTAREA/.test(el.tagName))return;render(1)};
+async function sync(u){const ref=doc(db,'users',u.uid),s=await getDoc(ref);
+ if(s.exists()){await updateDoc(ref,{lastLogin:serverTimestamp()});return{groupId:null,...s.data()}}
+ const d={uid:u.uid,name:pend||u.displayName||(u.email||'').split('@')[0]||'Nutzer',email:u.email||'',provider:PV[u.providerData[0]?.providerId]||'email',createdAt:serverTimestamp(),lastLogin:serverTimestamp(),groupId:null};
+ await setDoc(ref,d);return d}
+function detach(){unsub.forEach(f=>f());unsub=[];S.group=null;S.walks=[];S.gl=false;S.gerr=''}
+function attach(id){detach();
+ unsub.push(onSnapshot(doc(db,'groups',id),s=>{S.group=s.exists()?s.data():null;S.gerr=s.exists()?'':'Diese Gruppe existiert nicht mehr.';S.gl=true;soft()},()=>{S.gerr='Kein Zugriff auf die Gruppe.';S.gl=true;soft()}));
+ unsub.push(onSnapshot(collection(db,'groups',id,'walks'),s=>{S.walks=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));soft()},()=>{}))}
+async function createGroup(name){const u=S.user,g=doc(collection(db,'groups')),code=mkCode();
+ await setDoc(g,{name,code,ownerId:u.uid,memberIds:[u.uid],members:{[u.uid]:{name:S.profile.name||'Ich',role:'Admin'}},dog:null,createdAt:serverTimestamp()});
+ await setDoc(doc(db,'invites',code),{gid:g.id});
+ await updateDoc(doc(db,'users',u.uid),{groupId:g.id});S.profile.groupId=g.id;attach(g.id)}
+async function joinGroup(code){const u=S.user,s=await getDoc(doc(db,'invites',code.trim().toUpperCase()));
+ if(!s.exists())throw{code:'dd/not-found'};const id=s.data().gid;
+ await updateDoc(doc(db,'groups',id),{memberIds:arrayUnion(u.uid),['members.'+u.uid]:{name:S.profile.name||'Mitglied',role:'Mitglied'}});
+ await updateDoc(doc(db,'users',u.uid),{groupId:id});S.profile.groupId=id;attach(id)}
+const saveDog=async d=>{if(isDemo()){S.demo.dog=d;return}await updateDoc(doc(db,'groups',gid()),{dog:d})};
+const upd=async(id,p)=>{if(isDemo()){Object.assign(S.demo.walks.find(w=>w.id==id),p);return}await updateDoc(doc(db,'groups',gid(),'walks',String(id)),p)};
+const addWalk=async w=>{if(isDemo()){S.demo.walks.push({...w,id:Date.now()});S.demo.walks.sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));return}await addDoc(collection(db,'groups',gid(),'walks'),{...w,createdBy:S.user.uid,createdAt:serverTimestamp()})};
+const AUTH={
+ async social(p){S.err='';try{const v=p=='google'?new GoogleAuthProvider():new OAuthProvider('apple.com');if(p=='apple'){v.addScope('email');v.addScope('name')}await signInWithPopup(auth,v)}catch(e){S.err=msg(e);render(1)}},
+ async email(reg,n,e,p){S.err='';try{if(reg){pend=n;await createUserWithEmailAndPassword(auth,e,p)}else await signInWithEmailAndPassword(auth,e,p)}catch(x){S.err=msg(x);render(1)}},
+ async logout(){await signOut(auth);location.hash='#/'}};
+onAuthStateChanged(auth,async u=>{detach();S.user=u;S.profile={};S.demo=null;
+ if(u){try{S.profile=await sync(u)}catch(e){console.error(e);S.err=msg(e)}if(S.profile.groupId)attach(S.profile.groupId)}
+ S.ready=true;render()});
 
+/* ---------- Ansichten ---------- */
+const auth_=reg=>center(`${LOGO}<div><h1>${reg?'Konto erstellen':'Willkommen zurück'}</h1><p class="mute" style="margin-top:8px">${reg?'In einer Minute startklar.':'Schau nach, wer heute mit dem Hund geht.'}</p></div><div class="stack" style="gap:12px"><button class="btn ghost" data-a="google">Mit Google fortfahren</button><button class="btn ghost" data-a="apple">Mit Apple fortfahren</button></div><div class="sep">oder mit E-Mail</div>${err()}<form class="stack" style="gap:12px" data-f="${reg?'authr':'authl'}">${reg?'<input class="input" name="n" placeholder="Dein Name" autocomplete="name" required>':''}<input class="input" name="e" type="email" placeholder="E-Mail" autocomplete="email" required><input class="input" name="p" type="password" placeholder="Passwort" minlength="8" autocomplete="${reg?'new':'current'}-password" required><button class="btn">${reg?'Konto erstellen':'Anmelden'}</button></form><p class="mute sm" style="text-align:center">${reg?'Schon dabei? <a class="leaf b" href="#/login">Anmelden</a>':'Neu hier? <a class="leaf b" href="#/register">Konto erstellen</a>'}</p>`);
+const planForm=X=>{const lab=t=>`<p class="mute sm" style="margin-bottom:8px">${t}</p>`,row='class="row" style="flex-wrap:wrap;gap:8px"',who=[['me','Ich'],...X.members.filter(m=>m.id!=X.me).map(m=>[m.id,esc(m.n)]),['','Offen lassen']];
+ return `<form class="card stack" data-f="plan" style="gap:16px"><h2 style="font-size:17px">Neue Runde einplanen</h2><div>${lab('Tag')}<div ${row}>${[0,1,2,3,4,5,6].map(i=>chip(S.pd==i,'pd',i,dayLbl(i))).join('')}</div></div><div>${lab('Art der Runde')}<div ${row}>${Object.keys(TIMES).map(l=>chip(S.pl==l,'pl',l,l)).join('')}</div></div><div>${lab('Uhrzeit')}<input class="input" type="time" name="t" value="${S.pt}" required></div><div>${lab('Wer geht?')}<div ${row}>${who.map(p=>chip(S.pw==p[0],'pw',p[0],p[1])).join('')}</div></div><button class="btn">Runde speichern</button></form>`};
 const R={
 '':()=>'<div class="wide"><header class="row sp" style="padding:24px 0">'+LOGO+'<div class="row" style="gap:8px"><a class="sm b mute" href="#/login" style="padding:8px 12px;text-decoration:none">Anmelden</a><a class="btn auto sm" style="padding:10px 16px" href="#/register">Kostenlos starten</a></div></header>'+
 '<section class="hero"><div><h1>Wer geht mit dem Hund?</h1><p class="leaf b" style="font-size:24px;margin-top:20px">DogDuty weiß es.</p><p class="mute" style="font-size:18px;margin:20px 0 32px;max-width:420px">Die Gassi-Planung für Familien, Paare und WGs. Fair, transparent und ohne Nachfragen im Gruppenchat.</p><div class="row" style="flex-wrap:wrap"><a class="btn auto" href="#/register">Gruppe erstellen</a><a class="btn ghost auto" data-a="demo" href="#/home">Demo ansehen</a></div></div>'+
 '<div class="card stack" style="max-width:360px;width:100%;margin:auto;box-shadow:0 24px 60px #0008"><div class="row sp"><div><p class="b" style="font-size:26px">Bruno</p><p class="leaf sm">'+dot('var(--leaf)')+'Gut versorgt</p></div><span class="av" style="width:56px;height:56px;background:var(--ink);color:#fff">'+PAW+'</span></div><div style="background:var(--ink);border-radius:18px;padding:16px"><p class="mute sm">Nächste Runde</p><p class="b" style="font-size:30px">18:00 Uhr</p><p class="mute">Tim ist dran</p></div><div class="btn">ICH GEHE</div></div></section>'+
 '<section class="feat">'+[['Ein Blick, eine Antwort','Du siehst sofort, wer als Nächstes mit dem Hund rausgeht.'],['Runden tauschen','Kannst du nicht? Ein Tipp, und die Gruppe wird gefragt.'],['Fair verteilt','Jede erledigte Runde wird festgehalten. Keine Diskussionen mehr.']].map(f=>'<div class="card"><h2 style="font-size:18px">'+f[0]+'</h2><p class="mute" style="margin-top:8px">'+f[1]+'</p></div>').join('')+'</section></div>',
-login:()=>auth(false),register:()=>auth(true),
-setup:()=>center('<div><p class="mute sm">Schritt 1 von 2</p><h1 style="margin-top:4px">Deine Gruppe</h1><p class="mute" style="margin-top:8px">Erstelle eine neue Gruppe oder tritt mit einem Einladungscode bei.</p></div><div class="tabs" role="tablist"><button role="tab" data-a="tab" data-v="new" class="'+(S.tab=='new'?'on':'')+'">Erstellen</button><button role="tab" data-a="tab" data-v="join" class="'+(S.tab=='join'?'on':'')+'">Beitreten</button></div>'+
-'<form class="stack" data-f="setup">'+(S.tab=='new'?'<input class="input" name="g" placeholder="Gruppenname, z. B. Familie Berger" required>':'<input class="input" placeholder="Einladungscode, z. B. BRUNO-7K2P" style="text-transform:uppercase;letter-spacing:.1em" required>')+'<button class="btn">'+(S.tab=='new'?'Weiter':'Gruppe beitreten')+'</button></form>'),
-dog:()=>center('<div><p class="mute sm">Schritt 2 von 2</p><h1 style="margin-top:4px">Wer ist dein Hund?</h1></div><form class="stack" data-f="dog"><label class="card" style="width:120px;height:120px;border-radius:50%;margin:auto;display:grid;place-items:center;text-align:center;border-style:dashed;color:var(--mute);font-size:14px;cursor:pointer"><input type="file" accept="image/*" hidden>Foto<br>hinzufügen</label><input class="input" name="n" placeholder="Name" required><input class="input" name="a" placeholder="Alter (optional)"><input class="input" name="b" placeholder="Rasse (optional)"><button class="btn">Los geht’s</button></form>'),
-home:()=>{const t=S.walks.filter(w=>w.d==0),dn=t.filter(w=>w.s=='erledigt'),nx=t.find(w=>w.s!='erledigt'),op=t.some(w=>w.s=='offen'),
-pe=dn.reduce((a,w)=>a+(w.pee||0),0),po=dn.reduce((a,w)=>a+(w.poop||0),0),last=dn[dn.length-1];
-return shell('home','<header class="row sp"><div><h1 style="font-size:38px">'+S.dog.n+'</h1><p style="font-size:18px;font-weight:600;margin-top:4px">'+dot(op?'var(--amber)':'var(--leaf)')+(op?'Aufmerksamkeit':'Gut versorgt')+'</p></div><span class="av" style="width:64px;height:64px;font-size:32px;background:var(--card);border:1px solid var(--line);color:#fff">'+PAW+'</span></header>'+
-'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="card" style="padding:16px"><p class="mute sm">Letzte Runde</p><p class="b" style="font-size:24px;margin-top:4px">'+(last?last.t+' Uhr':'–')+'</p></div><div class="card" style="padding:16px;border-color:#8FE3A066"><p class="mute sm">Nächste Runde</p><p class="b leaf" style="font-size:24px;margin-top:4px">'+(nx?nx.t+' Uhr':'–')+'</p></div></div>'+
-(nx?'<div class="card row"><span class="av" style="background:var(--leaf)">'+(nx.w?nm(nx.w)[0]:'?')+'</span><div><p class="mute sm">'+nx.l+'</p><p class="b" style="font-size:20px">'+(nx.w?nm(nx.w):'Noch offen')+'</p></div></div>':'')+
-'<div class="card"><h2 style="font-size:17px">Heute</h2><div class="stack" style="gap:8px;margin-top:12px">'+t.map(w=>'<div class="row sp"><span class="row" style="gap:10px">'+(w.s=='erledigt'?ic('check','var(--leaf)'):ic('clock','var(--amber)'))+w.l+'</span><span class="mute">'+w.t+'</span></div>').join('')+'</div><div class="row b" style="gap:20px;border-top:1px solid var(--line);margin-top:16px;padding-top:16px"><span class="row" style="gap:6px">'+ic('pee','#7FC4FF')+'Pipi ×'+pe+'</span><span class="row" style="gap:6px">'+ic('poop','#D9A066')+'Kaka ×'+po+'</span></div></div>'+
-'<div class="stack" style="gap:12px">'+(nx&&nx.w==ME?'<a class="btn" href="#/walk">RUNDE DOKUMENTIEREN</a>':'<button class="btn" data-a="go">ICH GEHE</button>')+'<button class="btn ghost" data-a="cant">ICH KANN NICHT</button></div>')},
-calendar:()=>{const ds=S.view=='tag'?[S.day]:[0,1,2,3,4,5,6];
-return shell('calendar','<div class="row sp"><h1>Kalender</h1><button class="btn auto sm" style="padding:10px 16px" data-a="plan">'+(S.plan?'Schließen':'+ Runde einplanen')+'</button></div>'+(S.plan?planForm():'')+'<div class="tabs"><button data-a="view" data-v="tag" class="'+(S.view=='tag'?'on':'')+'">Tag</button><button data-a="view" data-v="woche" class="'+(S.view=='woche'?'on':'')+'">Woche</button></div>'+
-(S.view=='tag'?'<div class="dayrow">'+DAYS.map((d,i)=>'<button class="chip '+(S.day==i?'on':'')+'" data-a="day" data-v="'+i+'">'+d+'</button>').join('')+'</div>':'')+
-ds.map(d=>{const l=S.walks.filter(w=>w.d==d);return '<section class="stack" style="gap:12px">'+(S.view=='woche'?'<h2 class="mute sm">'+DAYS[d]+'</h2>':'')+(l.length?l.map(w=>'<article class="card row" style="padding:16px;gap:14px"><p class="b" style="font-size:20px;width:56px">'+w.t+'</p><div class="grow"><p class="b">'+w.l+'</p><p class="mute sm">'+nm(w.w)+'</p></div><div class="stack" style="gap:8px;justify-items:end"><span class="pill '+w.s+'">'+LBL[w.s]+'</span>'+(w.s=='offen'?'<button class="leaf b sm" style="background:none;border:0;cursor:pointer" data-a="take" data-v="'+w.id+'">Übernehmen</button>':'')+((w.s=='uebernommen'||w.s=='geplant')&&w.w==ME?'<button class="mute sm" style="background:none;border:0;cursor:pointer;text-decoration:underline" data-a="free" data-v="'+w.id+'">Freigeben</button>':'')+'</div></article>').join(''):'<p class="card mute">Keine Runden geplant.</p>')+'</section>'}).join(''))},
-walk:()=>shell('walk','<div><h1>Runde dokumentieren</h1><p class="mute" style="margin-top:4px">Wie war der Spaziergang mit '+S.dog.n+'?</p></div>'+
-'<section class="stack" style="gap:12px"><h2 style="font-size:16px">Dauer</h2><div class="row" style="flex-wrap:wrap;gap:8px">'+['10 Min','20 Min','30 Min','45 Min','60+ Min'].map(d=>'<button class="chip '+(S.dur==d?'on':'')+'" data-a="dur" data-v="'+d+'" aria-pressed="'+(S.dur==d)+'">'+d+'</button>').join('')+'</div></section>'+
-'<section class="stack" style="gap:12px"><h2 style="font-size:16px">Geschäft</h2><div class="row"><button class="chip grow '+(S.pee?'on':'')+'" style="padding:16px;font-size:16px" data-a="pee" aria-pressed="'+S.pee+'"><span class="row" style="justify-content:center;gap:8px">'+ic('pee')+'Pipi</span></button><button class="chip grow '+(S.poop?'on':'')+'" style="padding:16px;font-size:16px" data-a="poop" aria-pressed="'+S.poop+'"><span class="row" style="justify-content:center;gap:8px">'+ic('poop')+'Kaka</span></button></div>'+(!S.pee&&!S.poop?'<p class="mute sm">Ohne Auswahl wird „Nichts“ gespeichert.</p>':'')+'</section>'+
-'<section class="stack" style="gap:12px"><h2 style="font-size:16px">Notiz (optional)</h2><textarea class="input" id="note" placeholder="z. B. Hat mit einem Labrador gespielt">'+S.note+'</textarea></section><button class="btn" data-a="save">Runde speichern</button>'),
-group:()=>{const adm=M.find(m=>m.id==ME).r=='Admin';return shell('group','<h1>'+S.grp.n+'</h1><div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;font-size:32px;background:var(--ink);color:#fff">'+PAW+'</span><div class="grow"><p class="b" style="font-size:20px">'+S.dog.n+'</p><p class="mute sm">'+S.dog.breed+' · '+S.dog.age+'</p></div>'+(adm?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':'')+'</div>'+
-'<div class="card"><p class="mute sm">Einladungscode</p><div class="row sp" style="margin-top:8px"><p class="b" style="font-size:24px;letter-spacing:.1em">'+S.grp.code+'</p><button class="btn ghost auto sm" style="padding:8px 16px" data-a="copy">'+(S.copied?'Kopiert':'Kopieren')+'</button></div></div>'+
-'<div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">'+M.map(m=>'<div class="row" style="padding:12px 0"><span class="av" style="background:'+m.c+'">'+m.n[0]+'</span><span class="grow b">'+m.n+(m.id==ME?' (du)':'')+'</span><span class="mute sm">'+m.r+'</span></div>').join('')+'</div>'+(adm?'<button class="btn ghost" style="margin-top:8px">Mitglied einladen</button>':'')+'</div><button class="mute sm" data-a="logout" style="background:none;border:0;padding:8px;cursor:pointer">Abmelden</button>')}
+login:()=>auth_(false),register:()=>auth_(true),
+setup:()=>center(`<div><p class="mute sm">Schritt 1 von 2</p><h1 style="margin-top:4px">Deine Gruppe</h1><p class="mute" style="margin-top:8px">Erstelle eine neue Gruppe oder tritt mit einem Einladungscode bei.</p></div><div class="tabs" role="tablist"><button role="tab" data-a="tab" data-v="new" class="${S.tab=='new'?'on':''}">Erstellen</button><button role="tab" data-a="tab" data-v="join" class="${S.tab=='join'?'on':''}">Beitreten</button></div>${err()}<form class="stack" data-f="setup">${S.tab=='new'?'<input class="input" name="g" placeholder="Gruppenname, z. B. Familie Berger" required>':'<input class="input" name="c" placeholder="Einladungscode, z. B. K7MP-2QXA" style="text-transform:uppercase;letter-spacing:.1em" required>'}<button class="btn">${S.tab=='new'?'Gruppe erstellen':'Gruppe beitreten'}</button></form>`),
+dog:()=>{const d=cur()?.dog;return center(`<div><p class="mute sm">${d?'Hund bearbeiten':'Schritt 2 von 2'}</p><h1 style="margin-top:4px">${d?esc(d.n):'Wer ist dein Hund?'}</h1></div>${err()}<form class="stack" data-f="dog"><input class="input" name="n" placeholder="Name" value="${esc(d?.n)}" required><input class="input" name="a" placeholder="Alter (optional)" value="${esc(d?.age)}"><input class="input" name="b" placeholder="Rasse (optional)" value="${esc(d?.breed)}"><button class="btn">${d?'Speichern':'Weiter'}</button>${d?'<a class="btn ghost" href="#/group">Abbrechen</a>':''}</form>`)},
+home:()=>{const X=cur(),t=iso(),ws=X.walks,dog=X.dog,multi=X.members.length>1,hasW=ws.length>0;
+ const steps=[['Gruppe erstellt',1,''],['Hund hinzufügen',!!dog,'#/dog'],['Mitglieder einladen',multi,'#/group'],['Erste Gassirunde planen',hasW,'#/calendar']],first=steps.findIndex(s=>!s[1]);
+ const todo=first<0?'':`<div class="card stack" style="gap:12px"><h2 style="font-size:17px">So startest du</h2>${steps.map(s=>`<div class="row">${s[1]?ic('check','var(--leaf)'):'<span class="dot" style="background:var(--line)"></span>'}<span class="${s[1]?'mute':'b'}">${s[0]}</span></div>`).join('')}<a class="btn" ${first==3?'data-a="goplan" ':''}href="${steps[first][2]}">${steps[first][0]}</a></div>`;
+ if(!dog||!hasW)return shell('home',`<header><h1 style="font-size:34px">${esc(dog?dog.n:X.grp.n)}</h1><p class="mute" style="margin-top:4px">${dog?'Noch keine Runde geplant.':'Willkommen bei DogDuty.'}</p></header>${todo}`);
+ const today=ws.filter(w=>w.d==t),done=today.filter(w=>w.s=='erledigt'),nx=ws.find(w=>w.s!='erledigt'&&w.d>=t),last=[...ws].reverse().find(w=>w.s=='erledigt'),
+ late=today.some(w=>w.s!='erledigt'&&w.t<nowT()),open=today.some(w=>w.s=='offen'),st=late?['#FF7B7B','Runde nötig']:open?['var(--amber)','Aufmerksamkeit']:['var(--leaf)','Gut versorgt'],
+ pe=done.reduce((a,w)=>a+(w.pee||0),0),po=done.reduce((a,w)=>a+(w.poop||0),0);
+ return shell('home',`<header class="row sp"><div><h1 style="font-size:38px">${esc(dog.n)}</h1><p style="font-size:18px;font-weight:600;margin-top:4px">${dot(st[0])}${st[1]}</p></div><span class="av" style="width:64px;height:64px;background:var(--card);border:1px solid var(--line);color:#fff">${PAW}</span></header>${todo}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="card" style="padding:16px"><p class="mute sm">Letzte Runde</p><p class="b" style="font-size:22px;margin-top:4px">${last?fmt(last):'–'}</p></div><div class="card" style="padding:16px;border-color:#8FE3A066"><p class="mute sm">Nächste Runde</p><p class="b leaf" style="font-size:22px;margin-top:4px">${nx?fmt(nx):'–'}</p></div></div>
+${nx?`<div class="card row"><span class="av" style="background:var(--leaf)">${nx.who?esc(nm(X,nx.who)[0]):'?'}</span><div><p class="mute sm">${esc(nx.l)}</p><p class="b" style="font-size:20px">${nx.who?esc(nm(X,nx.who)):'Noch offen'}</p></div></div>`:''}
+<div class="card"><h2 style="font-size:17px">Heute</h2><div class="stack" style="gap:8px;margin-top:12px">${today.length?today.map(w=>`<div class="row sp"><span class="row" style="gap:10px">${w.s=='erledigt'?ic('check','var(--leaf)'):ic('clock','var(--amber)')}${esc(w.l)}</span><span class="mute">${w.t}</span></div>`).join(''):'<p class="mute">Heute sind keine Runden geplant.</p>'}</div><div class="row b" style="gap:20px;border-top:1px solid var(--line);margin-top:16px;padding-top:16px"><span class="row" style="gap:6px">${ic('pee','#7FC4FF')}Pipi ×${pe}</span><span class="row" style="gap:6px">${ic('poop','#D9A066')}Kaka ×${po}</span></div></div>
+<div class="stack" style="gap:12px">${!nx?'<button class="btn" data-a="goplan">Nächste Runde planen</button>':nx.who==X.me?'<a class="btn" href="#/walk">RUNDE DOKUMENTIEREN</a><button class="btn ghost" data-a="cant">ICH KANN NICHT</button>':!nx.who?'<button class="btn" data-a="go">ICH GEHE</button>':''}</div>`)},
+calendar:()=>{const X=cur(),ds=S.view=='tag'?[S.day]:[0,1,2,3,4,5,6];
+ return shell('calendar',`<div class="row sp"><h1>Kalender</h1><button class="btn auto sm" style="padding:10px 16px" data-a="plan">${S.plan?'Schließen':'+ Runde einplanen'}</button></div>${S.plan?planForm(X):''}<div class="tabs"><button data-a="view" data-v="tag" class="${S.view=='tag'?'on':''}">Tag</button><button data-a="view" data-v="woche" class="${S.view=='woche'?'on':''}">Woche</button></div>${S.view=='tag'?`<div class="dayrow">${[0,1,2,3,4,5,6].map(i=>chip(S.day==i,'day',i,dayLbl(i))).join('')}</div>`:''}${ds.map(o=>{const l=X.walks.filter(w=>w.d==iso(o));return `<section class="stack" style="gap:12px">${S.view=='woche'?`<h2 class="mute sm">${dayLbl(o)}</h2>`:''}${l.length?l.map(w=>`<article class="card row" style="padding:16px;gap:14px"><p class="b" style="font-size:20px;width:56px">${w.t}</p><div class="grow"><p class="b">${esc(w.l)}</p><p class="mute sm">${esc(nm(X,w.who))}</p></div><div class="stack" style="gap:8px;justify-items:end"><span class="pill ${w.s}">${LBL[w.s]}</span>${w.s=='offen'?`<button class="leaf b sm" style="background:none;border:0;cursor:pointer" data-a="take" data-v="${w.id}">Übernehmen</button>`:''}${(w.s=='uebernommen'||w.s=='geplant')&&w.who==X.me?`<button class="mute sm" style="background:none;border:0;cursor:pointer;text-decoration:underline" data-a="free" data-v="${w.id}">Freigeben</button>`:''}</div></article>`).join(''):'<p class="card mute">Keine Runden geplant.</p>'}</section>`}).join('')}`)},
+walk:()=>{const X=cur(),w=X.walks.find(w=>w.who==X.me&&w.s!='erledigt'&&w.d<=iso());
+ if(!w)return shell('walk',`<h1>Runde dokumentieren</h1><div class="card stack"><p>Du hast gerade keine übernommene Runde.</p><a class="btn" href="#/calendar">Zum Kalender</a></div>`);
+ const big='style="padding:16px;font-size:16px"',tg=(on,a,k,l)=>`<button type="button" class="chip grow ${on?'on':''}" ${big} data-a="${a}" aria-pressed="${on}"><span class="row" style="justify-content:center;gap:8px">${ic(k)}${l}</span></button>`;
+ return shell('walk',`<div><h1>Runde dokumentieren</h1><p class="mute" style="margin-top:4px">${esc(w.l)}, ${w.t} Uhr · ${esc(X.dog?.n||'dein Hund')}</p></div><section class="stack" style="gap:12px"><h2 style="font-size:16px">Dauer</h2><div class="row" style="flex-wrap:wrap;gap:8px">${['10 Min','20 Min','30 Min','45 Min','60+ Min'].map(d=>chip(S.dur==d,'dur',d,d)).join('')}</div></section><section class="stack" style="gap:12px"><h2 style="font-size:16px">Geschäft</h2><div class="row">${tg(S.pee,'pee','pee','Pipi')}${tg(S.poop,'poop','poop','Kaka')}</div>${!S.pee&&!S.poop?'<p class="mute sm">Ohne Auswahl wird „Nichts“ gespeichert.</p>':''}</section><section class="stack" style="gap:12px"><h2 style="font-size:16px">Notiz (optional)</h2><textarea class="input" id="note" placeholder="z. B. Hat mit einem Labrador gespielt">${esc(S.note)}</textarea></section><button class="btn" data-a="save">Runde speichern</button>`)},
+group:()=>{const X=cur(),d=X.dog;
+ return shell('group',`<h1>${esc(X.grp.n)}</h1>${d?`<div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;background:var(--ink);color:#fff">${PAW}</span><div class="grow"><p class="b" style="font-size:20px">${esc(d.n)}</p><p class="mute sm">${esc([d.breed,d.age].filter(Boolean).join(' · ')||'Keine weiteren Angaben')}</p></div>${X.admin?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':''}</div>`:X.admin?'<a class="btn ghost" href="#/dog">Hund hinzufügen</a>':'<p class="card mute">Noch kein Hund angelegt.</p>'}
+<div class="card stack" style="gap:12px"><p class="mute sm">Einladungscode</p><div class="row sp"><p class="b" style="font-size:24px;letter-spacing:.1em">${esc(X.grp.code)}</p><button class="btn ghost auto sm" style="padding:8px 16px" data-a="copy">${S.copied?'Kopiert':'Kopieren'}</button></div><button class="btn" data-a="share">Mitglieder einladen</button></div>
+<div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">${X.members.map(m=>`<div class="row" style="padding:12px 0"><span class="av" style="background:${m.c}">${esc(m[ 'n'][0])}</span><span class="grow b">${esc(m.n)}${m.id==X.me?' (du)':''}</span><span class="mute sm">${m.r}</span></div>`).join('')}</div></div>
+${isDemo()?'<a class="btn ghost" href="#/" data-a="enddemo">Demo beenden</a>':'<button class="mute sm" data-a="logout" style="background:none;border:0;padding:8px;cursor:pointer">Abmelden</button>'}`)}
 };
-function render(keep){const k=(location.hash||'#/').slice(2),A=document.getElementById('app');
-if(!S.ready){A.innerHTML=center('<p class="mute" style="text-align:center">Lädt …</p>');return}
-if(['home','calendar','walk','group','setup','dog'].includes(k)&&!S.user&&!S.demo){location.hash='#/login';return}
-A.innerHTML=(R[k]||R[''])();if(!keep)scrollTo(0,0)}
-setTimeout(()=>{if(!S.ready){S.ready=true;S.err='Der Anmeldedienst ist nicht erreichbar.';render()}},8000);
-function planForm(){const chip=(on,a,v,t)=>'<button type="button" class="chip '+(on?'on':'')+'" data-a="'+a+'" data-v="'+v+'" aria-pressed="'+on+'">'+t+'</button>',lab=t=>'<p class="mute sm" style="margin-bottom:8px">'+t+'</p>';
-return '<form class="card stack" data-f="plan" style="gap:16px"><h2 style="font-size:17px">Neue Runde einplanen</h2><div>'+lab('Tag')+'<div class="dayrow">'+DAYS.map((d,i)=>chip(S.pd==i,'pd',i,d)).join('')+'</div></div><div>'+lab('Art der Runde')+'<div class="row" style="flex-wrap:wrap;gap:8px">'+['Morgenrunde','Mittagsrunde','Abendrunde','Nachtrunde'].map(l=>chip(S.pl==l,'pl',l,l)).join('')+'</div></div><div>'+lab('Uhrzeit')+'<input class="input" type="time" name="t" value="'+S.pt+'" required></div><div>'+lab('Wer geht?')+'<div class="row" style="flex-wrap:wrap;gap:8px">'+[['tim','Ich'],['lena','Lena'],['noah','Noah'],['','Offen lassen']].map(p=>chip(S.pw==p[0],'pw',p[0],p[1])).join('')+'</div></div><button class="btn">Runde speichern</button></form>'}
-const nxt=()=>S.walks.find(w=>w.d==0&&w.s!='erledigt');
-document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v,w=S.walks.find(x=>x.id==v);
-if(a=='google'||a=='apple'){AUTH.social(a);return}if(a=='logout'){AUTH.logout();return}if(a=='demo')S.demo=true;if(a=='tab')S.tab=v;if(a=='plan')S.plan=!S.plan;if(a=='pd')S.pd=+v;if(a=='pw')S.pw=v;if(a=='pl'){S.pl=v;S.pt={Morgenrunde:'07:30',Mittagsrunde:'13:00',Abendrunde:'18:00',Nachtrunde:'21:30'}[v]}if(a=='view')S.view=v;if(a=='day')S.day=+v;if(a=='dur')S.dur=v;if(a=='pee')S.pee=!S.pee;if(a=='poop')S.poop=!S.poop;
-if(a=='go'&&nxt()){nxt().w=ME;nxt().s='uebernommen'}
-if(a=='cant'&&nxt()){nxt().w=undefined;nxt().s='offen'}
-if(a=='take'){w.w=ME;w.s='uebernommen'}if(a=='free'){w.w=undefined;w.s='offen'}
-if(a=='copy'){navigator.clipboard&&navigator.clipboard.writeText(S.grp.code).catch(()=>{});S.copied=true;setTimeout(()=>{S.copied=false;render(1)},1800)}
-if(a=='save'){const n=S.walks.find(x=>x.d==0&&x.w==ME&&x.s!='erledigt');if(n){n.s='erledigt';n.pee=+S.pee;n.poop=+S.poop}S.pee=S.poop=false;S.note='';location.hash='#/home';return}
-render(1)});
+const go=h=>{location.hash=h};
+function render(keep){const A=document.getElementById('app'),k=(location.hash||'#/').slice(2),load=m=>{A.innerHTML=center(`<p class="mute" style="text-align:center">${m}</p>`)};
+ if(!S.ready)return load('Lädt …');
+ if(k!=S.lk){S.err='';S.lk=k}
+ if(S.user&&['','login','register'].includes(k))return go(S.profile.groupId?'#/home':'#/setup');
+ if(['home','calendar','walk','group','dog','setup'].includes(k)){
+  if(!S.user&&!S.demo)return go('#/login');
+  if(S.user){if(!S.profile.groupId&&k!='setup')return go('#/setup');if(S.profile.groupId&&k=='setup')return go('#/home');
+   if(S.profile.groupId&&!S.gl)return load('Gruppe wird geladen …');
+   if(S.profile.groupId&&(S.gerr||!cur())){A.innerHTML=center(`<p>${esc(S.gerr||'Gruppe konnte nicht geladen werden.')}</p><button class="btn ghost" data-a="logout">Abmelden</button>`);return}}
+  else if(k=='setup')return go('#/home')}
+ A.innerHTML=(R[k]||R[''])();if(!keep)scrollTo(0,0)}
+
+document.addEventListener('click',async e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v;
+ try{const X=cur(),nx=X&&X.walks.find(w=>w.s!='erledigt'&&w.d>=iso());
+ switch(a){
+ case'google':case'apple':return AUTH.social(a);
+ case'logout':return AUTH.logout();
+ case'demo':if(!S.user)S.demo=mkDemo();return;
+ case'enddemo':S.demo=null;return;
+ case'tab':S.tab=v;break;case'view':S.view=v;break;case'day':S.day=+v;break;
+ case'plan':S.plan=!S.plan;break;case'goplan':S.plan=true;go('#/calendar');break;
+ case'pd':S.pd=+v;break;case'pw':S.pw=v;break;case'pl':S.pl=v;S.pt=TIMES[v];break;
+ case'dur':S.dur=v;break;case'pee':S.pee=!S.pee;break;case'poop':S.poop=!S.poop;break;
+ case'go':if(nx)await upd(nx.id,{who:X.me,s:'uebernommen'});break;
+ case'cant':if(nx)await upd(nx.id,{who:null,s:'offen'});break;
+ case'take':await upd(v,{who:X.me,s:'uebernommen'});break;
+ case'free':await upd(v,{who:null,s:'offen'});break;
+ case'save':{const w=X.walks.find(w=>w.who==X.me&&w.s!='erledigt'&&w.d<=iso());if(w)await upd(w.id,{s:'erledigt',pee:+S.pee,poop:+S.poop,dur:S.dur,note:S.note,doneBy:X.me,...(isDemo()?{}:{doneAt:serverTimestamp()})});S.pee=S.poop=false;S.note='';go('#/home');break}
+ case'copy':navigator.clipboard?.writeText(X.grp.code).catch(()=>{});S.copied=true;setTimeout(()=>{S.copied=false;render(1)},1800);break;
+ case'share':{const x=`Tritt unserer DogDuty-Gruppe „${X.grp.n}“ bei. Einladungscode: ${X.grp.code}\n${location.origin}${location.pathname}`;if(navigator.share)navigator.share({text:x}).catch(()=>{});else{navigator.clipboard?.writeText(x).catch(()=>{});S.copied=true;setTimeout(()=>{S.copied=false;render(1)},1800)}break}
+ }}catch(x){console.error(x);S.err=msg(x)}
+ render(1)});
 document.addEventListener('input',e=>{if(e.target.id=='note')S.note=e.target.value;if(e.target.name=='t')S.pt=e.target.value});
-document.addEventListener('submit',e=>{e.preventDefault();const f=e.target.dataset.f,d=new FormData(e.target);
-if(f=='authl'||f=='authr'){AUTH.email(f=='authr',d.get('n'),d.get('e'),d.get('p'));return}if(f=='plan'){S.pt=d.get('t');S.walks.push({id:Date.now(),l:S.pl,t:S.pt,d:S.pd,w:S.pw||undefined,s:S.pw?'geplant':'offen'});S.walks.sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));S.plan=false;S.view='tag';S.day=S.pd;render(1);return}
-if(f=='setup'){if(S.tab=='new'){if(d.get('g')){S.grp.n=d.get('g');S.grp.code=d.get('g').trim().split(' ').pop().slice(0,5).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}location.hash='#/dog'}else{AUTH.done();location.hash='#/home'}}
-if(f=='dog'){S.dog={n:d.get('n'),age:d.get('a')||'–',breed:d.get('b')||'–'};AUTH.done();location.hash='#/home'}});
-addEventListener('hashchange',()=>render());render();
-</script><script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,OAuthProvider,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-/* TRAGE HIER DEINE FIREBASE-DATEN EIN */
-const cfg={apiKey:"AIzaSyA-vyQbJjdlt2HHlxJaXICoDY00X2DFA-0",authDomain:"dogduty-7cc17.firebaseapp.com",projectId:"dogduty-7cc17",appId:"1:164287072195:web:4cf49d6b423a6c07639f76"};
-const W='E-Mail oder Passwort ist falsch.',E={'auth/invalid-credential':W,'auth/wrong-password':W,'auth/user-not-found':W,'auth/invalid-email':'Bitte gib eine gültige E-Mail ein.','auth/email-already-in-use':'Diese E-Mail ist schon registriert.','auth/weak-password':'Das Passwort ist zu schwach.','auth/popup-closed-by-user':'Anmeldung abgebrochen.','auth/cancelled-popup-request':'Anmeldung abgebrochen.','auth/popup-blocked':'Das Popup wurde blockiert. Bitte erlaube Popups.','auth/operation-not-allowed':'Diese Anmeldeart ist in Firebase noch nicht aktiviert.','auth/unauthorized-domain':'Diese Adresse ist in Firebase nicht freigegeben.','auth/too-many-requests':'Zu viele Versuche. Bitte warte kurz.'};
-const fail=m=>{S.err=m;render(1)},msg=e=>E[e.code]||'Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
-if(cfg.apiKey.startsWith('DEIN')){const n=()=>fail('Firebase ist noch nicht eingerichtet.');window.AUTH={social:n,email:n,done(){},logout(){}};S.ready=true;render()}
-else{
-const auth=getAuth(initializeApp(cfg)),db=getFirestore();let pend=null;
-const PV={'google.com':'google','apple.com':'apple',password:'email'};
-async function sync(u){const ref=doc(db,'users',u.uid),s=await getDoc(ref);
- if(s.exists()){await updateDoc(ref,{lastLogin:serverTimestamp()});return s.data()}
- const d={uid:u.uid,name:pend||u.displayName||(u.email||'').split('@')[0]||'Nutzer',email:u.email||'',provider:PV[u.providerData[0]?.providerId]||'email',createdAt:serverTimestamp(),lastLogin:serverTimestamp(),setupDone:false};
- await setDoc(ref,d);return d}
-window.AUTH={
- async social(p){S.err='';try{const v=p=='google'?new GoogleAuthProvider():new OAuthProvider('apple.com');if(p=='apple'){v.addScope('email');v.addScope('name')}await signInWithPopup(auth,v)}catch(e){fail(msg(e))}},
- async email(reg,n,e,p){S.err='';try{if(reg){pend=n;await createUserWithEmailAndPassword(auth,e,p)}else await signInWithEmailAndPassword(auth,e,p)}catch(x){fail(msg(x))}},
- async done(){if(S.user){S.profile.setupDone=true;try{await updateDoc(doc(db,'users',S.user.uid),{setupDone:true})}catch(e){console.error(e)}}},
- async logout(){await signOut(auth);S.demo=false;location.hash='#/'}};
-onAuthStateChanged(auth,async u=>{S.user=u;S.profile={};
- if(u){try{S.profile=await sync(u)}catch(e){console.error('Datenbank:',e)}}
- S.ready=true;const k=(location.hash||'#/').slice(2);
- if(u&&['','login','register'].includes(k)){const t=S.profile.setupDone?'#/home':'#/setup';if(location.hash===t)render();else location.hash=t}else render()});
-}
-</script>
-</body></html>
+document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target.dataset.f,d=new FormData(e.target);S.err='';
+ try{
+ if(f=='authl'||f=='authr')return AUTH.email(f=='authr',d.get('n'),d.get('e'),d.get('p'));
+ if(f=='setup'){if(S.tab=='new'){await createGroup(d.get('g').trim());go('#/dog')}else{await joinGroup(d.get('c'));go('#/home')}return}
+ if(f=='dog'){await saveDog({n:d.get('n').trim(),age:d.get('a').trim(),breed:d.get('b').trim()});go('#/home');return}
+ if(f=='plan'){const X=cur(),who=S.pw=='me'?X.me:S.pw||null;S.pt=d.get('t');await addWalk({l:S.pl,t:S.pt,d:iso(S.pd),who,s:who?'geplant':'offen'});S.plan=false;S.view='tag';S.day=S.pd}
+ }catch(x){console.error(x);S.err=msg(x)}
+ render(1)});
+addEventListener('hashchange',()=>render());
+setTimeout(()=>{if(!S.ready){S.ready=true;S.err='Der Anmeldedienst ist nicht erreichbar.';render()}},8000);
+
+</script></body></html>
