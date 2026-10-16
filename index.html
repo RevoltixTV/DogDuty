@@ -2,6 +2,17 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DogDuty</title>
+<meta name="description" content="Wer geht mit dem Hund? DogDuty weiß es.">
+<meta name="theme-color" content="#1B1E21">
+<meta name="application-name" content="DogDuty">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DogDuty">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--ink:#1B1E21;--card:#292D31;--line:#383D42;--mute:#9AA3AA;--leaf:#8FE3A0;--amber:#F5C76B;--fg:#fff;
@@ -201,6 +212,7 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
  }catch(x){console.error(x);S.err=msg(x)}
  render(1)});
 addEventListener('hashchange',()=>render());
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 setTimeout(()=>{if(!S.ready){S.ready=true;S.err='Der Anmeldedienst ist nicht erreichbar.';render()}},8000);
 
 </script></body></html>
