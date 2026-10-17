@@ -47,7 +47,7 @@ textarea.input{min-height:96px;resize:vertical}
 .av{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;font-weight:800;color:var(--ink);flex-shrink:0}
 .pill{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;white-space:nowrap}
 .pill.offen{color:var(--amber);border-color:#F5C76B66}.pill.uebernommen{color:var(--leaf);border-color:#8FE3A080}.pill.erledigt{background:var(--leaf);color:var(--ink);border-color:var(--leaf)}
-nav.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#1B1E21e6;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{overscroll-behavior-y:none}nav.bar[hidden]{display:none}nav.bar{position:fixed;left:0;right:0;bottom:0;z-index:10;transform:translateZ(0);will-change:transform;background:#1B1E21e6;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav.bar div{max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 nav.bar a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;font-size:12px;font-weight:600;color:var(--mute);text-decoration:none}
 nav.bar a.on{color:var(--leaf)}nav.bar svg{width:24px;height:24px}
@@ -59,25 +59,25 @@ nav.bar a.on{color:var(--leaf)}nav.bar svg{width:24px;height:24px}
 .sep{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px}.sep:before,.sep:after{content:"";height:1px;flex:1;background:var(--line)}
 .dayrow{display:flex;flex-wrap:wrap;gap:8px}.ic{width:1.2em;height:1.2em;flex-shrink:0}.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}.av svg{width:55%;height:55%}
 </style></head>
-<body><div id="app"></div>
+<body><div id="app"></div><nav class="bar" id="nav" aria-label="Hauptnavigation" hidden></nav>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,OAuthProvider,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendEmailVerification,reload}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,onSnapshot,serverTimestamp,arrayUnion,getCountFromServer,getDocs,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,OAuthProvider,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendEmailVerification,reload,deleteUser,reauthenticateWithPopup,reauthenticateWithCredential,EmailAuthProvider}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,addDoc,collection,onSnapshot,serverTimestamp,arrayUnion,getCountFromServer,getDocs,writeBatch,query,where,deleteDoc,arrayRemove,deleteField}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{getMessaging,getToken,isSupported}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 const cfg={apiKey:"AIzaSyA-vyQbJjdlt2HHlxJaXICoDY00X2DFA-0",authDomain:"dogduty-7cc17.firebaseapp.com",projectId:"dogduty-7cc17",appId:"1:164287072195:web:4cf49d6b423a6c07639f76"};
 const PAW='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="5.5" cy="10" rx="2.2" ry="2.8"/><ellipse cx="9.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="14.5" cy="5.5" rx="2.2" ry="2.9"/><ellipse cx="18.5" cy="10" rx="2.2" ry="2.8"/><path d="M12 11c-3 0-6 3.2-6 6 0 2 1.6 3 3.4 3 1 0 1.8-.5 2.6-.5s1.6.5 2.6.5c1.8 0 3.4-1 3.4-3 0-2.8-3-6-6-6z"/></svg>';
 const LOGO='<div class="logo"><i>'+PAW+'</i>DogDuty</div>';
-const P={pee:'<path d="M12 3c3 4.5 5.5 7.5 5.5 10.5a5.5 5.5 0 01-11 0C6.5 10.5 9 7.5 12 3z"/>',poop:'<path d="M12 3c2 1.5 2.5 3 1.5 4.5 2 .3 3.5 1.6 3.5 3.3 2 .5 3 1.8 3 3.4 0 2.2-2 3.8-4.5 3.8h-7C6 18 4 16.4 4 14.2c0-1.6 1-2.9 3-3.4 0-1.7 1.5-3 3.5-3.3C9.5 6 10.5 4.5 12 3z"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.3 1.5M4.5 5.5L7.5 3M19.5 5.5L16.5 3"/>'};
+const P={gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',pee:'<path d="M12 3c3 4.5 5.5 7.5 5.5 10.5a5.5 5.5 0 01-11 0C6.5 10.5 9 7.5 12 3z"/>',poop:'<path d="M12 3c2 1.5 2.5 3 1.5 4.5 2 .3 3.5 1.6 3.5 3.3 2 .5 3 1.8 3 3.4 0 2.2-2 3.8-4.5 3.8h-7C6 18 4 16.4 4 14.2c0-1.6 1-2.9 3-3.4 0-1.7 1.5-3 3.5-3.3C9.5 6 10.5 4.5 12 3z"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',clock:'<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.8l2.3 1.5M4.5 5.5L7.5 3M19.5 5.5L16.5 3"/>'};
 const ic=(k,c)=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:'+(c||'currentColor')+'">'+P[k]+'</svg>';
 const dot=c=>'<span class="dot" style="background:'+c+'"></span>';
 const IC={'':'',home:'M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z',calendar:'M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',walk:'M5 12h14M13 6l6 6-6 6',group:'M16 11a3 3 0 100-6 3 3 0 000 6zM8 11a3 3 0 100-6 3 3 0 000 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5'};
 const NAV=[['home','Home'],['calendar','Kalender'],['walk','Runde'],['group','Gruppe']];
 /* Zentrale Versionsverwaltung: nur HIER ändern */
-const APP_VERSION='0.5.0';
+const APP_VERSION='0.6.0';
 /* Nur Starthilfe für den ersten Owner. Die Berechtigung prüfen die Firestore-Regeln; danach gilt die in der Datenbank gespeicherte Rolle. */
 const OWNER_EMAIL='jfs.gehring@icloud.com';
-const NOTES='Verbesserte Rollen und Sicherheit sowie kleine Verbesserungen.';
+const NOTES='Es gibt neue Funktionen und Verbesserungen.';
 /* Web-Push-Schlüssel aus Firebase: Projekteinstellungen > Cloud Messaging > Web-Push-Zertifikate */
 const VAPID_KEY='';
 const updModal=()=>`<div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:20;background:#000b;display:grid;place-items:center;padding:24px"><div class="card stack" style="max-width:360px;width:100%;text-align:center"><p style="font-size:40px">🎉</p><h2 style="font-size:22px">DogDuty wurde aktualisiert</h2><p class="b leaf">Version ${APP_VERSION}</p><p class="mute">${NOTES}</p><button class="btn" data-a="closeupd">Schließen</button></div></div>`;
@@ -99,7 +99,8 @@ try{const sv=localStorage.getItem('dd_seen');if(sv&&sv!=APP_VERSION)S.upd=true;i
 const err=()=>S.err?`<p role="alert" style="color:#FF9B9B;font-size:14px">${esc(S.err)}</p>`:'';
 const chip=(on,a,v,t)=>`<button type="button" class="chip ${on?'on':''}" data-a="${a}" data-v="${esc(v)}" aria-pressed="${on}">${t}</button>`;
 const center=b=>`<div class="wrap stack" style="min-height:100dvh;align-content:center;gap:24px">${b}</div>`;
-const shell=(r,b)=>`<div class="wrap stack">${isDemo()?'<div class="row sp pill" style="border-color:#F5C76B66;color:var(--amber)"><span>Demo-Modus · Beispieldaten</span><a href="#/" data-a="enddemo" style="text-decoration:underline">Beenden</a></div>':''}${b}</div><nav class="bar" aria-label="Hauptnavigation"><div style="grid-template-columns:repeat(${navItems().length},1fr)">${navItems().map(([k,l])=>`<a href="#/${k}"${k===r?' class="on" aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[k]}"/></svg>${l}</a>`).join('')}</div></nav>`;
+const shell=(r,b)=>{S.navOn=r;return `<div class="wrap stack">${isDemo()?'<div class="row sp pill" style="border-color:#F5C76B66;color:var(--amber)"><span>Demo-Modus · Beispieldaten</span><a href="#/" data-a="enddemo" style="text-decoration:underline">Beenden</a></div>':''}${b}</div>`};
+const navHtml=r=>`<div style="grid-template-columns:repeat(${navItems().length},1fr)">${navItems().map(([k,l])=>`<a href="#/${k}"${k===r?' class="on" aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[k]}"/></svg>${l}</a>`).join('')}</div>`;
 /* Demo-Daten: nur im Demo-Modus, nur im Speicher, nie in Konten */
 const mkDemo=()=>({grp:{n:'Familie Berger',code:'DEMO-0000'},dog:{n:'Bruno',breed:'Labrador Mix',age:'4 Jahre'},me:'tim',admin:true,
  members:[['tim','Tim','Admin'],['lena','Lena','Admin'],['noah','Noah','Mitglied']].map(([id,n,r],i)=>({id,n,r,c:COL[i]})),
@@ -113,7 +114,7 @@ const isOwnerU=()=>!!S.user&&S.profile.role=='owner',navItems=()=>isOwnerU()?[..
 const nm=(X,id)=>X.members.find(m=>m.id==id)?.n||'Niemand eingetragen';
 
 /* ---------- Firebase ---------- */
-const E={'auth/invalid-credential':'E-Mail oder Passwort ist falsch.','auth/wrong-password':'E-Mail oder Passwort ist falsch.','auth/user-not-found':'E-Mail oder Passwort ist falsch.','auth/invalid-email':'Bitte gib eine gültige E-Mail ein.','auth/email-already-in-use':'Diese E-Mail ist schon registriert.','auth/weak-password':'Das Passwort ist zu schwach.','auth/popup-closed-by-user':'Anmeldung abgebrochen.','auth/cancelled-popup-request':'Anmeldung abgebrochen.','auth/popup-blocked':'Das Popup wurde blockiert. Bitte erlaube Popups.','auth/operation-not-allowed':'Diese Anmeldeart ist in Firebase noch nicht aktiviert.','auth/unauthorized-domain':'Diese Adresse ist in Firebase nicht freigegeben.','auth/too-many-requests':'Zu viele Versuche. Bitte warte kurz.','permission-denied':'Keine Berechtigung. Sind die neuen Firestore-Regeln veröffentlicht?','dd/not-found':'Diesen Einladungscode gibt es nicht.'};
+const E={'auth/invalid-credential':'E-Mail oder Passwort ist falsch.','auth/wrong-password':'E-Mail oder Passwort ist falsch.','auth/user-not-found':'E-Mail oder Passwort ist falsch.','auth/invalid-email':'Bitte gib eine gültige E-Mail ein.','auth/email-already-in-use':'Diese E-Mail ist schon registriert.','auth/weak-password':'Das Passwort ist zu schwach.','auth/popup-closed-by-user':'Anmeldung abgebrochen.','auth/cancelled-popup-request':'Anmeldung abgebrochen.','auth/popup-blocked':'Das Popup wurde blockiert. Bitte erlaube Popups.','auth/operation-not-allowed':'Diese Anmeldeart ist in Firebase noch nicht aktiviert.','auth/unauthorized-domain':'Diese Adresse ist in Firebase nicht freigegeben.','auth/too-many-requests':'Zu viele Versuche. Bitte warte kurz.','permission-denied':'Keine Berechtigung. Sind die neuen Firestore-Regeln veröffentlicht?','dd/not-found':'Diesen Einladungscode gibt es nicht.','dd/owner':'Das Owner-Konto kann hier nicht gelöscht werden.','auth/requires-recent-login':'Bitte melde dich neu an und versuche es erneut.'};
 const msg=e=>E[e?.code]||'Das hat nicht geklappt. Bitte versuche es erneut.';
 const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
 let pend=null,unsub=[];
@@ -167,6 +168,31 @@ async function loadStats(){S.sl=true;S.serr='';render(1);
 const OWNER_MODULES=[['Premium-Nutzer','Übersicht zahlender Nutzer'],['Nutzerwachstum','Neue Nutzer pro Woche'],['Feedback','Rückmeldungen der Nutzer'],['Fehlerberichte','Technische Fehler der App'],['DogDuty Care','Spendenübersicht']];
 const ownerCard=()=>{if(!S.user)return'';if(S.profile.role=='owner')return'<a class="btn ghost" href="#/owner">Owner Dashboard</a>';
  if((S.user.email||'').toLowerCase()==OWNER_EMAIL&&!S.user.emailVerified)return'<div class="card stack" style="gap:12px"><h2 style="font-size:17px">E-Mail bestätigen</h2><p class="mute sm">Bestätige deine E-Mail-Adresse, damit dein Konto freigeschaltet werden kann.</p><button class="btn" data-a="verify">Bestätigungs-E-Mail senden</button><button class="btn ghost" data-a="recheck">Ich habe bestätigt</button></div>';return''};
+/* ---------- Einstellungen, Gruppe verlassen, Konto löschen ---------- */
+const CHANGELOG=[['0.6.0',['Einstellungen mit Kontoverwaltung','Gruppe umbenennen und verlassen','Konto löschen','Feste Navigationsleiste']],['0.5.0',['Owner Dashboard','Rollen und mehr Sicherheit']],['0.4.0',['Login verbessert','Neues App-Icon','Kalender verbessert','Gruppenverwaltung erweitert','Benachrichtigungen für Gassirunden']]];
+const changelog=()=>CHANGELOG.map(([v,l])=>`<div style="margin-top:16px"><p class="b">DogDuty Version ${v}</p><p class="mute sm" style="margin:4px 0 8px">Neu:</p><div class="stack" style="gap:6px">${l.map(t=>`<div class="row" style="gap:10px;align-items:flex-start">${ic('check','var(--leaf)')}<span>${t}</span></div>`).join('')}</div></div>`).join('');
+const box=(t,p,b)=>`<div role="dialog" aria-modal="true" style="position:fixed;inset:0;z-index:60;background:#000b;display:grid;place-items:center;padding:24px"><div class="card stack" style="max-width:360px;width:100%"><h2 style="font-size:22px">${t}</h2><p class="mute">${p}</p>${S.derr?`<p role="alert" style="color:#FF9B9B;font-size:14px">${esc(S.derr)}</p>`:''}<div class="stack" style="gap:12px">${b}</div></div></div>`;
+const dlg=()=>{if(S.dlg=='leave'){const last=S.group&&S.group.memberIds.length==1;return box('Gruppe verlassen?',`Du wirst aus der Gruppe entfernt. Danach kannst du einer anderen Gruppe beitreten oder eine neue erstellen.${last?' Du bist das letzte Mitglied, die Gruppe wird dabei gelöscht.':''}`,'<button class="btn ghost" data-a="dlgclose">Abbrechen</button><button class="btn ghost" style="color:#FF9B9B" data-a="leaveok">Gruppe verlassen</button>')}
+ if(S.dlg=='delete'){const pw=S.user?.providerData[0]?.providerId=='password';return box('Bist du sicher?','Dein Konto und deine persönlichen Daten werden dauerhaft gelöscht.',`<form class="stack" data-f="delacc" style="gap:12px">${pw?'<input class="input" name="pw" type="password" placeholder="Passwort zur Bestätigung" autocomplete="current-password" required>':'<p class="mute sm">Zur Sicherheit meldest du dich kurz erneut an.</p>'}<button class="btn ghost" type="button" data-a="dlgclose">Abbrechen</button><button class="btn ghost" style="color:#FF9B9B">Konto löschen</button></form>`)}
+ return''};
+const saveName=async n=>{if(isDemo()){S.demo.grp.n=n;return}await updateDoc(doc(db,'groups',gid()),{name:n})};
+async function leaveGroup(){const u=S.user,id=gid(),g=S.group;if(!id||!g)return;
+ const gref=doc(db,'groups',id),others=g.memberIds.filter(x=>x!==u.uid);
+ if(!others.length){const all=await getDocs(collection(db,'groups',id,'walks'));let b=writeBatch(db),n=0;
+  for(const d of all.docs){b.delete(d.ref);if(++n%400==0){await b.commit();b=writeBatch(db)}}
+  await b.commit();await deleteDoc(doc(db,'invites',g.code));await deleteDoc(gref)}
+ else{const ws=await getDocs(query(collection(db,'groups',id,'walks'),where('who','==',u.uid))),b=writeBatch(db);
+  ws.docs.forEach(d=>{if(d.data().s!='erledigt')b.update(d.ref,{who:null,s:'offen'})});
+  const up={memberIds:arrayRemove(u.uid),['members.'+u.uid]:deleteField()};
+  if(g.members[u.uid]?.role=='Admin'&&!others.some(x=>g.members[x]?.role=='Admin'))up['members.'+others[0]+'.role']='Admin';
+  b.update(gref,up);await b.commit()}
+ await updateDoc(doc(db,'users',u.uid),{groupId:null});detach();S.profile.groupId=null}
+async function deleteAccount(pw){const u=auth.currentUser;if(S.profile.role=='owner')throw{code:'dd/owner'};
+ const pid=u.providerData[0]?.providerId;
+ if(pid=='password')await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,pw));
+ else await reauthenticateWithPopup(u,pid=='apple.com'?new OAuthProvider('apple.com'):new GoogleAuthProvider());
+ if(S.profile.groupId&&S.group)await leaveGroup();
+ await deleteDoc(doc(db,'users',u.uid));await deleteUser(u)}
 const AUTH={
  async social(p){S.err='';try{const v=p=='google'?new GoogleAuthProvider():new OAuthProvider('apple.com');if(p=='apple'){v.addScope('email');v.addScope('name')}await signInWithPopup(auth,v)}catch(e){S.err=msg(e);render(1)}},
  async email(reg,n,e,p){S.err='';try{if(reg){pend=n;await createUserWithEmailAndPassword(auth,e,p)}else await signInWithEmailAndPassword(auth,e,p)}catch(x){S.err=msg(x);render(1)}},
@@ -209,37 +235,46 @@ owner:()=>{const st=S.stats,c=(l,v)=>`<div class="card" style="padding:16px"><p 
  return shell('owner',`<div class="row sp"><div><h1>Owner</h1><p class="mute sm">Nur für dich sichtbar</p></div><button class="btn ghost auto sm" style="padding:10px 16px" data-a="refresh">${S.sl?'Lädt …':'Aktualisieren'}</button></div>${S.serr?`<p role="alert" style="color:#FF9B9B;font-size:14px">${esc(S.serr)}</p>`:''}<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${c('Nutzer',st?st.users:'–')}${c('Gruppen',st?st.groups:'–')}${c('Hunde',st?st.dogs:'–')}${c('Gassirunden',st?st.walks:'–')}</div>${st?`<p class="mute sm">Stand: ${st.at.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} Uhr</p>`:''}
 <div class="card stack" style="gap:10px"><h2 style="font-size:17px">Dein Konto</h2><div class="row sp"><span class="mute">E-Mail</span><span>${esc(S.user.email)}</span></div><div class="row sp"><span class="mute">Rolle</span><span class="pill uebernommen">owner</span></div><p class="mute sm">Die Owner-Rolle ist in der Datenbank an dein Konto gebunden, nicht an die E-Mail-Adresse. E-Mail ändern folgt in einer späteren Version.</p></div>
 <div class="card"><h2 style="font-size:17px">Bald verfügbar</h2><div class="list" style="margin-top:8px">${OWNER_MODULES.map(m=>`<div class="row sp" style="padding:12px 0"><div><p class="b">${m[0]}</p><p class="mute sm">${m[1]}</p></div><span class="pill">Bald</span></div>`).join('')}</div></div>`)},
+settings:()=>{const X=cur(),real=!!S.user,grp=real&&S.profile.groupId&&X,
+ row=(l,sub,a,bad)=>`<button class="row sp" data-a="${a}" style="width:100%;background:none;border:0;padding:14px 0;cursor:pointer;text-align:left;color:${bad?'#FF9B9B':'var(--fg)'}"><span><span class="b">${l}</span>${sub?`<span class="mute sm" style="display:block">${sub}</span>`:''}</span><span class="mute">›</span></button>`;
+ return shell('group',`<div class="row" style="gap:8px"><a href="#/group" aria-label="Zurück" style="font-size:30px;line-height:1;text-decoration:none;color:var(--fg);padding:0 8px 4px 0">‹</a><h1>Einstellungen</h1></div>
+<div class="card"><h2 style="font-size:17px">Konto</h2><div class="list" style="margin-top:4px">${real?row('Abmelden','','logout')+row('Konto löschen','Dauerhaft, nicht rückgängig zu machen','delask',1):row('Demo beenden','','enddemo')}</div></div>
+${grp?`<div class="card"><h2 style="font-size:17px">Gruppe</h2>${S.rn?`<form class="stack" data-f="rename" style="gap:12px;margin:12px 0"><input class="input" name="g" value="${esc(X.grp.n)}" required><button class="btn">Speichern</button></form>`:''}<div class="list" style="margin-top:4px">${X.admin?row('Gruppe umbenennen',esc(X.grp.n),'rename'):''}${row('Gruppe verlassen','Danach kannst du eine andere Gruppe beitreten oder eine neue erstellen','leaveask',1)}</div></div>`:''}
+<div class="card"><h2 style="font-size:17px">Updates</h2><div class="list" style="margin-top:4px">${row('Änderungen der letzten Updates','','log')}</div>${S.log?changelog():''}</div>`)},
 group:()=>{const X=cur(),d=X.dog;
- return shell('group',`<h1>${esc(X.grp.n)}</h1>${d?`<div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;background:var(--ink);color:#fff">${PAW}</span><div class="grow"><p class="b" style="font-size:20px">${esc(d.n)}</p><p class="mute sm">${esc([d.breed,d.age].filter(Boolean).join(' · ')||'Keine weiteren Angaben')}</p></div>${X.admin?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':''}</div>`:X.admin?'<a class="btn ghost" href="#/dog">Hund hinzufügen</a>':'<p class="card mute">Noch kein Hund angelegt.</p>'}
+ return shell('group',`<div class="row sp"><h1>${esc(X.grp.n)}</h1><a href="#/settings" aria-label="Einstellungen" style="font-size:26px;display:grid;place-items:center;width:44px;height:44px;color:var(--fg)">${ic('gear')}</a></div>${d?`<div class="card row" style="gap:16px"><span class="av" style="width:64px;height:64px;background:var(--ink);color:#fff">${PAW}</span><div class="grow"><p class="b" style="font-size:20px">${esc(d.n)}</p><p class="mute sm">${esc([d.breed,d.age].filter(Boolean).join(' · ')||'Keine weiteren Angaben')}</p></div>${X.admin?'<a class="leaf b sm" href="#/dog">Bearbeiten</a>':''}</div>`:X.admin?'<a class="btn ghost" href="#/dog">Hund hinzufügen</a>':'<p class="card mute">Noch kein Hund angelegt.</p>'}
 <div class="card stack" style="gap:12px"><p class="mute sm">Einladungscode</p><div class="row sp"><p class="b" style="font-size:24px;letter-spacing:.1em">${esc(X.grp.code)}</p><button class="btn ghost auto sm" style="padding:8px 16px" data-a="copy">${S.copied?'Kopiert':'Kopieren'}</button></div><button class="btn" data-a="share">Mitglieder einladen</button></div>
 <div class="card"><h2 style="font-size:17px">Mitglieder</h2><div class="list" style="margin-top:8px">${X.members.map(m=>`<div class="row" style="padding:12px 0"><span class="av" style="background:${m.c}">${esc(m[ 'n'][0])}</span><span class="grow b">${esc(m.n)}${m.id==X.me?' (du)':''}</span><span class="mute sm">${m.r}</span></div>`).join('')}</div></div>
 ${ownerCard()}${notifCard()}${isDemo()?'<a class="btn ghost" href="#/" data-a="enddemo">Demo beenden</a>':'<button class="mute sm" data-a="logout" style="background:none;border:0;padding:8px;cursor:pointer">Abmelden</button>'}<div style="border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px;text-align:center"><p class="b">DogDuty</p><p class="mute sm">Version ${APP_VERSION}</p></div>`)}
 };
 const go=h=>{location.hash=h};
-function render(keep){const A=document.getElementById('app'),k=(location.hash||'#/').slice(2),load=m=>{A.innerHTML=center(`<p class="mute" style="text-align:center">${m}</p>`)};
+function render(keep){const nv=document.getElementById('nav');nv.hidden=true;S.navOn=null;const A=document.getElementById('app'),k=(location.hash||'#/').slice(2),load=m=>{A.innerHTML=center(`<p class="mute" style="text-align:center">${m}</p>`)};
  if(!S.ready)return load('Lädt …');
  if(k!=S.lk){S.err='';S.lk=k}
  if(S.user&&['','login','register'].includes(k))return go(S.profile.groupId?'#/home':'#/setup');
  if(k=='owner'){if(!S.user||S.profile.role!='owner')return go(S.user?'#/home':'#/login');if(!S.stats&&!S.sl)setTimeout(loadStats,0)}
+ else if(k=='settings'){if(!S.user&&!S.demo)return go('#/login')}
  else if(['home','calendar','walk','group','dog','setup'].includes(k)){
   if(!S.user&&!S.demo)return go('#/login');
   if(S.user){if(!S.profile.groupId&&k!='setup')return go('#/setup');if(S.profile.groupId&&k=='setup')return go('#/home');
    if(S.profile.groupId&&!S.gl)return load('Gruppe wird geladen …');
    if(S.profile.groupId&&(S.gerr||!cur())){A.innerHTML=center(`<p>${esc(S.gerr||'Gruppe konnte nicht geladen werden.')}</p><button class="btn ghost" data-a="logout">Abmelden</button>`);return}}
   else if(k=='setup')return go('#/home')}
- A.innerHTML=(R[k]||R[''])()+(S.upd?updModal():'');if(!keep)scrollTo(0,0)}
+ A.innerHTML=(R[k]||R[''])()+(S.upd?updModal():'')+dlg();if(S.navOn){nv.innerHTML=navHtml(S.navOn);nv.hidden=false}if(!keep)scrollTo(0,0)}
 
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,v=t.dataset.v;
  try{const X=cur(),nx=X&&X.walks.find(w=>w.s!='erledigt'&&w.d>=iso());
  switch(a){
  case'closeupd':try{localStorage.setItem('dd_seen',APP_VERSION)}catch(e){}S.upd=false;break;case'notif':await enablePush();break;
+ case'delask':S.dlg='delete';S.derr='';break;case'leaveask':S.dlg='leave';S.derr='';break;case'dlgclose':S.dlg=null;break;case'rename':S.rn=!S.rn;break;case'log':S.log=!S.log;break;
+ case'leaveok':try{await leaveGroup();S.dlg=null;go('#/setup')}catch(x){console.error(x);S.derr=msg(x)}break;
  case'verify':await sendEmailVerification(auth.currentUser);toast('Bestätigungs-E-Mail gesendet. Öffne den Link und tippe dann auf „Ich habe bestätigt“.');break;
  case'recheck':await reload(auth.currentUser);await auth.currentUser.getIdToken(true);await promote(auth.currentUser);break;
  case'refresh':S.stats=null;loadStats();return;
  case'google':case'apple':return AUTH.social(a);
  case'logout':return AUTH.logout();
  case'demo':if(!S.user)S.demo=mkDemo();return;
- case'enddemo':S.demo=null;return;
+ case'enddemo':S.demo=null;go('#/');return;
  case'tab':S.tab=v;break;case'view':S.view=v;break;case'day':S.day=+v;break;
  case'plan':S.plan=!S.plan;break;case'goplan':S.plan=true;go('#/calendar');break;
  case'pd':S.pd=+v;break;case'pw':S.pw=v;break;case'pl':S.pl=v;S.pt=TIMES[v];break;
@@ -259,6 +294,8 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
  if(f=='authl'||f=='authr')return AUTH.email(f=='authr',d.get('n'),d.get('e'),d.get('p'));
  if(f=='setup'){if(S.tab=='new'){await createGroup(d.get('g').trim());go('#/dog')}else{await joinGroup(d.get('c'));go('#/home')}return}
  if(f=='dog'){await saveDog({n:d.get('n').trim(),age:d.get('a').trim(),breed:d.get('b').trim()});go('#/home');return}
+ if(f=='rename'){await saveName(d.get('g').trim());S.rn=false}
+ if(f=='delacc'){try{await deleteAccount(d.get('pw'));S.dlg=null;go('#/')}catch(x){console.error(x);S.derr=msg(x)}}
  if(f=='plan'){const X=cur(),who=S.pw=='me'?X.me:S.pw||null;S.pt=d.get('t');await addWalk({l:S.pl,t:S.pt,d:iso(S.pd),who,s:who?'geplant':'offen'});S.plan=false;S.view='tag';S.day=S.pd}
  }catch(x){console.error(x);S.err=msg(x)}
  render(1)});
